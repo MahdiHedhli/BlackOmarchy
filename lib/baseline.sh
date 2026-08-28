@@ -1,0 +1,153 @@
+#!/usr/bin/env bash
+# Sanitized Omarchy baseline capture and compare.
+
+if [[ -n ${BLACKOMARCHY_BASELINE_LOADED:-} ]]; then
+  return 0 2>/dev/null || true
+fi
+BLACKOMARCHY_BASELINE_LOADED=1
+
+baseline_dir() {
+  printf '%s' "$(state_dir)/baseline"
+}
+
+hash_if_exists() {
+  local path=$1
+  if [[ -e $path ]]; then
+    if have_cmd sha256sum; then
+      sha256sum "$path"
+    else
+      shasum -a 256 "$path"
+    fi
+  fi
+}
+
+hash_tree() {
+  local root=$1
+  [[ -d $root ]] || return 0
+  find "$root" -type f -print0 2>/dev/null | sort -z | xargs -0 -n 1 sha256sum 2>/dev/null \
+    || find "$root" -type f -print0 2>/dev/null | sort -z | xargs -0 -n 1 shasum -a 256
+}
+
+omarchy_owned_hash_targets() {
+  blackomarchy_path /usr/share/omarchy/version
+  blackomarchy_path /usr/share/libalpm/hooks/00-omarchy-update-guard.hook
+  blackomarchy_path /etc/profile.d/omarchy.sh
+}
+
+capture_baseline() {
+  local dest user home
+  dest=$(baseline_dir)
+  install -d -m 0755 "$dest"
+  uname -m >"$dest/uname"
+  if [[ -r $(os_release_file) ]]; then
+    cp "$(os_release_file)" "$dest/os-release"
+  fi
+  omarchy_version_string >"$dest/omarchy-version"
+  cp "$(pacman_conf_file)" "$dest/pacman.conf"
+  repo_list >"$dest/repo-list" 2>/dev/null || true
+  omarchy_server_line >"$dest/omarchy-server" 2>/dev/null || true
+  pacman -Qqe >"$dest/explicit-packages" 2>/dev/null || true
+  pacman -Q omarchy omarchy-settings omarchy-keyring >"$dest/omarchy-packages" 2>/dev/null || true
+  : >"$dest/hashes.tsv"
+  local p
+  for p in $(omarchy_owned_hash_targets); do
+    hash_if_exists "$p" >>"$dest/hashes.tsv" || true
+  done
+  if [[ -d $(blackomarchy_path /usr/share/omarchy) ]]; then
+    hash_tree "$(blackomarchy_path /usr/share/omarchy)" >"$dest/omarchy-tree.hashes" || true
+  fi
+  user=$(invoking_user)
+  home=$(invoking_home)
+  if [[ -n $home && -d $home/.config/hypr ]]; then
+    hash_tree "$home/.config/hypr" >"$dest/hypr.hashes" || true
+  fi
+  if [[ -n $home && -d $home/.config/omarchy ]]; then
+    hash_tree "$home/.config/omarchy" >"$dest/omarchy-user.hashes" || true
+  fi
+  log "baseline captured"
+}
+
+compare_file() {
+  local name=$1 a=$2 b=$3
+  if ! cmp -s "$a" "$b"; then
+    printf '%s\n' "$name"
+    return 1
+  fi
+  return 0
+}
+
+baseline_compare() {
+  local dest failed=0
+  dest=$(baseline_dir)
+  [[ -d $dest ]] || die "no baseline snapshot found"
+
+  if ! cmp -s "$dest/omarchy-version" <(omarchy_version_string); then
+    err "Omarchy version drifted"
+    failed=1
+  fi
+  if ! cmp -s "$dest/omarchy-server" <(omarchy_server_line); then
+    err "Omarchy repository Server line drifted"
+    failed=1
+  fi
+  if [[ -f $dest/omarchy-packages ]]; then
+    if ! cmp -s "$dest/omarchy-packages" <(pacman -Q omarchy omarchy-settings omarchy-keyring 2>/dev/null || true); then
+      err "Omarchy packages changed"
+      failed=1
+    fi
+  fi
+
+  local p tmp
+  tmp=$(mktemp)
+  : >"$tmp"
+  for p in $(omarchy_owned_hash_targets); do
+    hash_if_exists "$p" >>"$tmp" || true
+  done
+  if ! cmp -s "$dest/hashes.tsv" "$tmp"; then
+    err "Omarchy-owned file hashes changed"
+    failed=1
+  fi
+  rm -f "$tmp"
+  if [[ -f $dest/omarchy-tree.hashes && -d $(blackomarchy_path /usr/share/omarchy) ]]; then
+    tmp=$(mktemp)
+    hash_tree "$(blackomarchy_path /usr/share/omarchy)" >"$tmp" || true
+    if ! cmp -s "$dest/omarchy-tree.hashes" "$tmp"; then
+      err "Omarchy tree hashes changed under /usr/share/omarchy"
+      failed=1
+    fi
+    rm -f "$tmp"
+  fi
+
+  local home
+  home=$(invoking_home)
+  if [[ -f $dest/hypr.hashes && -d $home/.config/hypr ]]; then
+    tmp=$(mktemp)
+    hash_tree "$home/.config/hypr" >"$tmp" || true
+    if ! cmp -s "$dest/hypr.hashes" "$tmp"; then
+      err "Hyprland user configuration changed"
+      failed=1
+    fi
+    rm -f "$tmp"
+  fi
+  if [[ -f $dest/omarchy-user.hashes && -d $home/.config/omarchy ]]; then
+    tmp=$(mktemp)
+    # Ignore the hook we install under hooks/pre-refresh-pacman.d
+    hash_tree "$home/.config/omarchy" | grep -v 'pre-refresh-pacman.d/blackomarchy' >"$tmp" || true
+    if ! grep -v 'pre-refresh-pacman.d/blackomarchy' "$dest/omarchy-user.hashes" | cmp -s - "$tmp"; then
+      # Compare without our hook files
+      local a b
+      a=$(mktemp) b=$(mktemp)
+      grep -v 'pre-refresh-pacman.d/blackomarchy' "$dest/omarchy-user.hashes" >"$a" || true
+      grep -v 'pre-refresh-pacman.d/blackomarchy' "$tmp" >"$b" || true
+      if ! cmp -s "$a" "$b"; then
+        err "Omarchy user configuration changed"
+        failed=1
+      fi
+      rm -f "$a" "$b"
+    fi
+    rm -f "$tmp"
+  fi
+
+  require_omarchy_repos
+  assert_single_blackarch
+  ((failed == 0))
+}

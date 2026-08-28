@@ -1,0 +1,8 @@
+radare2
+binwalk
+gdb
+strace
+ltrace
+hexedit
+checksec
+yara

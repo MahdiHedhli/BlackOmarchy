@@ -1,0 +1,157 @@
+#!/usr/bin/env bash
+# Thin Black omARCHy management CLI.
+
+set -euo pipefail
+
+resolve_lib() {
+  local here
+  here=$(cd "$(dirname "$0")" && pwd)
+  if [[ -f /usr/local/share/blackomarchy/lib/common.sh ]]; then
+    printf '%s\n' /usr/local/share/blackomarchy/lib
+    return
+  fi
+  if [[ -f $here/lib/common.sh ]]; then
+    printf '%s\n' "$here/lib"
+    return
+  fi
+  if [[ -f $here/../lib/common.sh ]]; then
+    printf '%s\n' "$here/../lib"
+    return
+  fi
+  printf '%s\n' /usr/local/share/blackomarchy/lib
+}
+
+LIB=$(resolve_lib)
+# shellcheck disable=SC1091
+source "$LIB/common.sh"
+load_paths
+# shellcheck disable=SC1091
+source "$LIB/detect.sh"
+# shellcheck disable=SC1091
+source "$LIB/pacman.sh"
+# shellcheck disable=SC1091
+source "$LIB/backup.sh"
+# shellcheck disable=SC1091
+source "$LIB/baseline.sh"
+# shellcheck disable=SC1091
+source "$LIB/blackarch.sh"
+# shellcheck disable=SC1091
+source "$LIB/packages.sh"
+# shellcheck disable=SC1091
+source "$LIB/install_cli.sh"
+
+usage() {
+  cat <<'EOF'
+Usage: blackomarchy <command>
+
+  status              Show repository, profile, and Omarchy version
+  verify              Compare Omarchy baseline and repo sanity
+  profiles            List curated profiles
+  install <profile>   Install a curated profile (or "all")
+  remove <profile>    Remove packages recorded for a profile
+  doctor              Detection, pacman.conf, and guard checks
+  help                Show this help
+EOF
+}
+
+cmd_status() {
+  printf 'Black omARCHy %s\n' "${BLACKOMARCHY_VERSION:-0.1.0}"
+  if [[ -f $(state_dir)/version ]]; then
+    printf 'installed layer: %s\n' "$(cat "$(state_dir)/version")"
+  else
+    printf 'installed layer: not recorded\n'
+  fi
+  printf 'Omarchy: %s\n' "$(omarchy_version_string)"
+  printf 'repos:'
+  local r
+  for r in core extra multilib omarchy blackarch; do
+    if repo_enabled "$r"; then
+      printf ' %s' "$r"
+    fi
+  done
+  printf '\n'
+  printf 'blackarch stanzas: %s\n' "$(blackarch_stanza_count)"
+  printf 'profiles:\n'
+  local p
+  for p in "${CURATED_PROFILES[@]}"; do
+    printf '  %s\n' "$p"
+  done
+}
+
+cmd_verify() {
+  detect_host
+  require_omarchy_repos
+  assert_single_blackarch
+  repo_enabled blackarch || die "blackarch repository is not enabled"
+  if [[ -d $(baseline_dir) ]]; then
+    baseline_compare || die "Omarchy baseline drift detected"
+  else
+    die "no baseline snapshot (was bootstrap run?)"
+  fi
+  log "verify ok"
+}
+
+cmd_profiles() {
+  list_profiles
+}
+
+cmd_install() {
+  local profile=${1:-}
+  [[ -n $profile ]] || die "usage: blackomarchy install <profile>"
+  require_root
+  unset OMARCHY_ALLOW_DIRECT_PACMAN OMARCHY_UPDATE_PACMAN
+  detect_host
+  ensure_state_dir
+  create_backup >/dev/null
+  ensure_blackarch_repo
+  install_profile "$profile"
+}
+
+cmd_remove() {
+  local profile=${1:-}
+  [[ -n $profile ]] || die "usage: blackomarchy remove <profile>"
+  require_root
+  remove_profile "$profile"
+}
+
+cmd_doctor() {
+  printf 'arch: %s\n' "$(uname -m)"
+  printf 'os-release ID: %s\n' "$(read_os_id 2>/dev/null || printf missing)"
+  if pacman_query omarchy-dev; then
+    printf 'channel: omarchy-dev (unsupported)\n'
+  elif pacman_query omarchy; then
+    printf 'channel: packaged omarchy\n'
+  else
+    printf 'channel: unknown\n'
+  fi
+  printf 'omarchy version: %s\n' "$(omarchy_version_string)"
+  printf 'update guard: '
+  if [[ -e $(blackomarchy_path /usr/share/libalpm/hooks/00-omarchy-update-guard.hook) ]]; then
+    printf 'present\n'
+  else
+    printf 'missing\n'
+  fi
+  printf 'pacman.conf: %s\n' "$(pacman_conf_file)"
+  repo_list | sed 's/^/  repo /'
+  if [[ -n ${OMARCHY_ALLOW_DIRECT_PACMAN:-} ]]; then
+    printf 'warning: OMARCHY_ALLOW_DIRECT_PACMAN is set in this environment\n'
+  fi
+  printf 'doctor does not read private/ or print secret values\n'
+}
+
+main() {
+  local cmd=${1:-help}
+  shift || true
+  case "$cmd" in
+    status) cmd_status "$@" ;;
+    verify) cmd_verify "$@" ;;
+    profiles) cmd_profiles "$@" ;;
+    install) cmd_install "$@" ;;
+    remove) cmd_remove "$@" ;;
+    doctor) cmd_doctor "$@" ;;
+    help|-h|--help) usage ;;
+    *) usage >&2; exit 2 ;;
+  esac
+}
+
+main "$@"

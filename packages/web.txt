@@ -1,0 +1,10 @@
+nikto
+sqlmap
+gobuster
+ffuf
+whatweb
+wafw00f
+feroxbuster
+wfuzz
+dirb
+commix

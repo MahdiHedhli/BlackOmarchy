@@ -1,0 +1,8 @@
+testdisk
+sleuthkit
+foremost
+binwalk
+yara
+perl-image-exiftool
+exiftool
+bulk-extractor

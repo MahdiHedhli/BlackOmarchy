@@ -1,0 +1,8 @@
+theharvester
+amass
+dnsenum
+dnsrecon
+whois
+whatweb
+enum4linux-ng
+recon-ng

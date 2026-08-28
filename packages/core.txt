@@ -1,0 +1,28 @@
+# Default Black omARCHy profile. Compatibility-certified on Omarchy.
+# Names are resolved at install time; missing or conflicting packages are skipped.
+nmap
+masscan
+tcpdump
+wireshark-cli
+nikto
+sqlmap
+gobuster
+ffuf
+whatweb
+theharvester
+enum4linux-ng
+impacket
+netexec
+hashcat
+john
+hydra
+radare2
+binwalk
+gdb
+testdisk
+sleuthkit
+foremost
+yara
+perl-image-exiftool
+whois
+traceroute

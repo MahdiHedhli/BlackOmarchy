@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Root-owned helper. Re-append [blackarch] using the same rules as lib/pacman.sh.
+set -euo pipefail
+
+if [[ ${EUID:-$(id -u)} -ne 0 ]]; then
+  exec sudo -n "$0" "$@"
+fi
+
+LIB=/usr/local/share/blackomarchy/lib
+# shellcheck disable=SC1091
+source "$LIB/common.sh"
+load_paths
+# shellcheck disable=SC1091
+source "$LIB/pacman.sh"
+
+if [[ ! -f /etc/pacman.d/blackarch-mirrorlist ]]; then
+  printf 'blackomarchy-reappend-repo: blackarch-mirrorlist missing\n' >&2
+  exit 1
+fi
+append_blackarch_stanza

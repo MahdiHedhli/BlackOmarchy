@@ -1,0 +1,16 @@
+<html>
+<body>
+<p>SHA1sum</p>
+<table>
+<tr><td>BlackArch Linux 64 bit Full ISO</td><td>ae64930aeddc491a4644bb3fa92a715145713c65</td></tr>
+<tr><td>BlackArch Linux 64 bit Slim ISO</td><td>00949f2908e66314906dce6afc6eaad562349250</td></tr>
+</table>
+<pre>
+curl -O https://blackarch.org/strap.sh
+# Verify the SHA1 sum
+echo 00688950aaf5e5804d2abebb8d3d3ea1d28525ed strap.sh | sha1sum -c
+chmod +x strap.sh
+sudo ./strap.sh
+</pre>
+</body>
+</html>

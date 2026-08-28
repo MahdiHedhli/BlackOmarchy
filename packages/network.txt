@@ -1,0 +1,10 @@
+nmap
+masscan
+tcpdump
+wireshark-cli
+netcat
+gnu-netcat
+socat
+traceroute
+ngrep
+netsniff-ng
