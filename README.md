@@ -1,5 +1,7 @@
 # Black omARCHy
 
+![Black omARCHy login](docs/images/login.png)
+
 An additive BlackArch layer for [Omarchy](https://omarchy.org).
 
 It is a bootstrap, a small CLI, and a set of package lists that have to
