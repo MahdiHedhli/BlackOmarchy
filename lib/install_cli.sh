@@ -98,6 +98,21 @@ install_omarchy_integration() {
   install_agent_skills
 }
 
+# User-level skill roots most coding agents scan. Canonical files stay
+# in share/skills/; these are copies so Grok, Claude, Cursor, Codex,
+# OpenCode, and Gemini CLI can all load them without a Grok-only path.
+agent_skill_dest_dirs() {
+  local home=$1
+  printf '%s\n' \
+    "$home/.agents/skills" \
+    "$home/.grok/skills" \
+    "$home/.claude/skills" \
+    "$home/.cursor/skills" \
+    "$home/.codex/skills" \
+    "$home/.config/opencode/skills" \
+    "$home/.gemini/skills"
+}
+
 install_agent_skills() {
   local home owner root src dest_root skill name
   home=$(invoking_home)
@@ -105,7 +120,7 @@ install_agent_skills() {
   root=$(project_root_from_lib)
   src="$root/share/skills"
   [[ -n $home && $home != /root && -d $src ]] || return 0
-  for dest_root in "$home/.grok/skills" "$home/.claude/skills" "$home/.agents/skills"; do
+  while IFS= read -r dest_root; do
     as_owner "$owner" mkdir -p "$dest_root"
     for skill in "$src"/*; do
       [[ -d $skill ]] || continue
@@ -117,7 +132,15 @@ install_agent_skills() {
       fi
       append_manifest_line "file	${dest_root}/${name}	skill"
     done
-  done
+  done < <(agent_skill_dest_dirs "$home")
+  if [[ -f $root/AGENTS.md ]]; then
+    as_owner "$owner" mkdir -p "$home/.agents"
+    install -m 0644 "$root/AGENTS.md" "$home/.agents/AGENTS.md"
+    if [[ -n $owner && $owner != root ]]; then
+      chown "$owner:$owner" "$home/.agents/AGENTS.md" 2>/dev/null || true
+    fi
+    append_manifest_line "file	${home}/.agents/AGENTS.md	skill"
+  fi
 }
 
 install_cli() {
@@ -192,9 +215,10 @@ remove_pre_refresh_hook() {
     as_owner "$owner" python3 "$merger" "$src" "$target" uninstall || true
   fi
   local dest_root name
-  for dest_root in "$home/.grok/skills" "$home/.claude/skills" "$home/.agents/skills"; do
+  while IFS= read -r dest_root; do
     for name in black-omarchy black-omarchy-pentest; do
       rm -rf "$dest_root/$name"
     done
-  done
+  done < <(agent_skill_dest_dirs "$home")
+  rm -f "$home/.agents/AGENTS.md"
 }

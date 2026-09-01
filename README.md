@@ -87,11 +87,11 @@ overlays `logo.png` with a small BLACK caption (BlackArch-like
 geometric sans) above the existing pixel OMARCHY wordmark, and the
 BlackArch katana through the A. Uninstall puts Omarchy's logo back.
 
-Bootstrap also installs two agent skills (`black-omarchy`,
-`black-omarchy-pentest`) into `~/.grok/skills/` (and Claude/agents
-compat dirs) so Grok on this host uses the curated tools
-collaboratively, with an authorization gate. See
-[docs/agent-skills.md](docs/agent-skills.md).
+Bootstrap installs two Agent Skills (`black-omarchy`,
+`black-omarchy-pentest`) as plain `SKILL.md` folders into the skill
+directories Grok, Claude Code, Cursor, Codex, OpenCode, and Gemini
+CLI already scan. Collaborative use, with an authorization gate. See
+[AGENTS.md](AGENTS.md) and [docs/agent-skills.md](docs/agent-skills.md).
 
 ## Updating
 

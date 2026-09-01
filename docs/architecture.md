@@ -34,8 +34,8 @@ The layer owns:
 - SDDM greeter `logo.png` overlay (Omarchy wordmark plus a BLACK caption
   and the BlackArch katana through the A). `Main.qml` is not patched.
   Uninstall restores the backed-up Omarchy logo.
-- Agent skills under `~/.grok/skills/black-omarchy{,-pentest}/` (and
-  Claude/agents compat copies). Canonical sources are `share/skills/`.
+- Agent Skills (`share/skills/`, mirrored to `.agents/skills/` and
+  user-level Grok/Claude/Cursor/Codex/OpenCode/Gemini skill dirs).
 
 It does not own Hyprland, Omarchy shell, themes, keybindings,
 mirrors, or the Omarchy update binary. Extension files live under

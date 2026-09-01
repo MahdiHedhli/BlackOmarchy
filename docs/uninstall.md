@@ -16,8 +16,8 @@ This removes:
 - the user-owned `pre-refresh-pacman.d` and `post-update.d` hooks
 - Security / profile rows from the menu overlay
 - the SDDM greeter logo overlay (Omarchy's original `logo.png` is restored)
-- agent skills under `~/.grok/skills/`, `~/.claude/skills/`, and
-  `~/.agents/skills/` (`black-omarchy`, `black-omarchy-pentest`)
+- agent skills copied into `~/.agents/skills/` and the Grok / Claude /
+  Cursor / Codex / OpenCode / Gemini skill directories
 
 It keeps, so re-add is the same gesture as any other optional app:
 

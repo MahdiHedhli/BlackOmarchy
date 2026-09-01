@@ -1,16 +1,32 @@
 # Agent skills
 
-Black omARCHy ships two skills so Grok (and Claude/Cursor-compatible
-agents) can use this workstation without assuming Kali.
+Black omARCHy ships two **Agent Skills** (`SKILL.md` folders) so any
+coding agent on this host can use the workstation without assuming
+Kali. The files are not Grok-specific.
 
-They install into the operator home on bootstrap:
+Canonical tree: `share/skills/`
 
-- `~/.grok/skills/black-omarchy/`
-- `~/.grok/skills/black-omarchy-pentest/`
-- the same names under `~/.claude/skills/` and `~/.agents/skills/`
+Repo discovery copies:
 
-In this repository they also live at `.grok/skills/` (copies of
-`share/skills/`) so a clone opened in Grok loads them.
+- `.agents/skills/` (vendor-neutral)
+- `.grok/skills/` (Grok)
+
+`AGENTS.md` and `CLAUDE.md` at the repo root point every agent at those
+paths.
+
+Bootstrap copies each skill into the operator home for the directories
+common agents already scan:
+
+- `~/.agents/skills/`
+- `~/.grok/skills/`
+- `~/.claude/skills/`
+- `~/.cursor/skills/`
+- `~/.codex/skills/`
+- `~/.config/opencode/skills/`
+- `~/.gemini/skills/`
+
+If an agent uses another path, copy `share/skills/*` there, or add
+`~/.agents/skills` to its skill search list.
 
 | Skill | When |
 | --- | --- |
