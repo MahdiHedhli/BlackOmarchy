@@ -4,6 +4,8 @@
 
 An additive BlackArch layer for [Omarchy](https://omarchy.org).
 
+**Project site:** [mahdihedhli.github.io/BlackOmarchy](https://mahdihedhli.github.io/BlackOmarchy/)
+
 It is a bootstrap, a small CLI, and a set of package lists that have to
 earn their place on an Omarchy host. It is not a Linux distribution, not
 an ISO, and not a restyle of Omarchy.

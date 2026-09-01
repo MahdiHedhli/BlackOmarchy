@@ -1,0 +1,17 @@
+{
+  "name": "Black omARCHy",
+  "short_name": "Black omARCHy",
+  "description": "An additive BlackArch layer for Omarchy.",
+  "start_url": "/BlackOmarchy/",
+  "display": "standalone",
+  "background_color": "#191a23",
+  "theme_color": "#191a23",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
