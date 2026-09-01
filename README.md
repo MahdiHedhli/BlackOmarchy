@@ -68,32 +68,51 @@ The script:
    enabled
 7. Installs the `core` profile one package at a time, skipping anything
    that would upgrade or replace already-installed software
-8. Installs the `blackomarchy` CLI
+8. Installs the `blackomarchy` CLI, Omarchy menu overlay, login
+   wordmark, update hooks, and Agent Skills
 9. Compares the Omarchy baseline and exits non-zero on unexpected drift
 
 Re-running bootstrap is safe. It will not duplicate `[blackarch]` or
-re-run `strap.sh` when the repo is already enabled.
+re-run `strap.sh` when the repo is already enabled. Re-run it after
+pulling this repo to refresh CLI, hooks, login overlay, and skills.
 
-After install, Omarchy's menu grows three additive entries (no
-upstream files are patched):
+After install, Omarchy's menu grows additive entries (no upstream files
+are patched):
 
 - Install > Black omARCHy
 - Remove > Black omARCHy
+- Install > Security tools (extra profiles)
 - Security (status, verify, and a few installed tools)
 
 Install and Remove use the same floating terminal Omarchy uses for
-Chrome, 1Password, and other optional apps.
+Chrome, 1Password, and other optional apps. After the first bootstrap,
+add/remove is that menu path. Uninstall keeps the Install row so
+re-add is the same gesture.
 
 The SDDM login screen keeps Omarchy's greeter and colors. Bootstrap
-overlays `logo.png` with a small BLACK caption (BlackArch-like
-geometric sans) above the existing pixel OMARCHY wordmark, and the
-BlackArch katana through the A. Uninstall puts Omarchy's logo back.
+overlays `logo.png` only: a quiet BLACK caption above the pixel
+OMARCHY wordmark, with the BlackArch katana through the A. Uninstall
+restores Omarchy's logo. `omarchy update` re-applies the overlay if
+the packaged greeter overwrote it.
 
-Bootstrap installs two Agent Skills (`black-omarchy`,
-`black-omarchy-pentest`) as plain `SKILL.md` folders into the skill
-directories Grok, Claude Code, Cursor, Codex, OpenCode, and Gemini
-CLI already scan. Collaborative use, with an authorization gate. See
-[AGENTS.md](AGENTS.md) and [docs/agent-skills.md](docs/agent-skills.md).
+## Agent skills
+
+Bootstrap installs two standard Agent Skills (`SKILL.md` folders), not
+Grok-only:
+
+| Skill | Role |
+| --- | --- |
+| `black-omarchy` | This host: CLI, profiles, `omarchy update`, Omarchy invariants |
+| `black-omarchy-pentest` | Authorized collaborative / semi-autonomous testing |
+
+They land in the directories common agents already scan (`~/.agents/skills`,
+`~/.grok/skills`, `~/.claude/skills`, `~/.cursor/skills`, `~/.codex/skills`,
+OpenCode, Gemini). A clone of this repo also has `.agents/skills/` plus
+[AGENTS.md](AGENTS.md) / [CLAUDE.md](CLAUDE.md).
+
+`black-omarchy-pentest` will not scan until authorization and scope are
+on record. It will not generate exploit source. Details:
+[docs/agent-skills.md](docs/agent-skills.md).
 
 ## Updating
 
@@ -117,11 +136,19 @@ documented user hooks so the stanza is restored automatically:
 - `~/.config/omarchy/hooks/pre-refresh-pacman.d/blackomarchy-blackarch.sh`
   runs after the template is copied and before `pacman -Syyuu`
 - `~/.config/omarchy/hooks/post-update.d/blackomarchy-post-update.sh`
-  runs at the end of `omarchy update` if a migration rewrote the file
+  runs at the end of `omarchy update`: re-appends `[blackarch]` if
+  needed, re-applies the login overlay, and refreshes the Omarchy
+  baseline pin so `blackomarchy verify` does not treat a successful
+  Omarchy upgrade as layer drift
 
 In both cases `[blackarch]` is appended last, so core/extra/omarchy
 keep package-name priority. The layer is not a fork and does not
 replace Omarchy's update binary.
+
+`omarchy update` does **not** git-pull this repo. To pick up new
+skills, hooks, or the login wordmark, pull and re-run
+`sudo ./bootstrap.sh` (or Install > Black omARCHy). That is
+idempotent.
 
 ## Package profiles
 
@@ -179,12 +206,13 @@ corruption and split-brain, not a compromise of blackarch.org itself.
 
 ## Known limitations
 
-- x86_64 and packaged Omarchy 4.x only
+- x86_64 and packaged Omarchy 4.x only (checked on 4.0.1 and 4.0.2)
 - `omarchy-dev` is refused
 - Some profile candidates will be missing or excluded on a given host
 - BlackArch tools that share a name with Arch `extra` keep the
   Omarchy/Arch version because `[blackarch]` is appended last
-- v0.1 does not add themes or keybindings; menu entries are an overlay only
+- v0.1 does not add Hyprland themes or keybindings; the menu, login
+  wordmark, and Agent Skills are overlays and uninstall cleanly
 - `hydra` pulls a large extra dependency set (including freerdp and
   subversion). That did not upgrade Omarchy's own packages.
 - `omarchy update -y` over a non-interactive SSH session may still hit
