@@ -10,31 +10,90 @@ project_root_from_lib() {
   cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd
 }
 
-install_pre_refresh_hook() {
-  local home dest src owner
+as_owner() {
+  local owner=$1
+  shift
+  if [[ -n $owner && $owner != root ]] && have_cmd sudo && [[ ${EUID:-$(id -u)} -eq 0 ]]; then
+    sudo -u "$owner" "$@"
+  else
+    "$@"
+  fi
+}
+
+share_file() {
+  local name=$1 root
+  root=$(project_root_from_lib)
+  if [[ -f $root/share/$name ]]; then
+    printf '%s\n' "$root/share/$name"
+    return
+  fi
+  if [[ -f ${BLACKOMARCHY_SHARE_DIR}/share/$name ]]; then
+    printf '%s\n' "${BLACKOMARCHY_SHARE_DIR}/share/$name"
+    return
+  fi
+  printf '%s\n' "${BLACKOMARCHY_SHARE_DIR}/$name"
+}
+
+seed_src_tree() {
+  local home owner dest root
+  home=$(invoking_home)
+  owner=$(invoking_user)
+  dest="$home/.local/share/blackomarchy-src"
+  root=$(project_root_from_lib)
+  [[ -n $home && $home != /root && -d $root ]] || return 0
+  as_owner "$owner" mkdir -p "$dest"
+  if have_cmd rsync; then
+    rsync -a --exclude private --exclude .git "$root/" "$dest/"
+  else
+    cp -a "$root"/. "$dest"/
+    rm -rf "$dest/private" "$dest/.git"
+  fi
+  if [[ -n $owner && $owner != root ]]; then
+    chown -R "$owner:$owner" "$dest" 2>/dev/null || true
+  fi
+}
+
+install_omarchy_integration() {
+  local home owner dest src
   home=$(invoking_home)
   owner=$(invoking_user)
   [[ -n $home && $home != /root && $home != / ]] || return 0
-  if [[ ! -d $home/.config/omarchy ]]; then
-    log "skipping pre-refresh hook; $home/.config/omarchy does not exist"
-    return 0
+
+  seed_src_tree
+
+  as_owner "$owner" mkdir -p \
+    "$home/.config/omarchy/hooks/pre-refresh-pacman.d" \
+    "$home/.config/omarchy/hooks/post-update.d" \
+    "$home/.config/omarchy/extensions"
+
+  src=$(share_file hooks/blackomarchy-blackarch.sh)
+  dest="$home/.config/omarchy/hooks/pre-refresh-pacman.d/blackomarchy-blackarch.sh"
+  if [[ -f $src ]]; then
+    install -m 0755 "$src" "$dest"
+    [[ -n $owner ]] && chown "$owner:$owner" "$dest" 2>/dev/null || true
+    append_manifest_line "file	${dest}	hook"
   fi
-  dest="$home/.config/omarchy/hooks/pre-refresh-pacman.d"
-  if [[ -n $owner ]] && have_cmd sudo; then
-    sudo -u "$owner" mkdir -p "$dest"
-  else
-    install -d -m 0755 "$dest"
+
+  src=$(share_file hooks/blackomarchy-post-update.sh)
+  dest="$home/.config/omarchy/hooks/post-update.d/blackomarchy-post-update.sh"
+  if [[ -f $src ]]; then
+    install -m 0755 "$src" "$dest"
+    [[ -n $owner ]] && chown "$owner:$owner" "$dest" 2>/dev/null || true
+    append_manifest_line "file	${dest}	hook"
   fi
-  src=$(project_root_from_lib)/share/hooks/blackomarchy-blackarch.sh
-  if [[ ! -f $src ]]; then
-    src="${BLACKOMARCHY_SHARE_DIR}/share/hooks/blackomarchy-blackarch.sh"
+
+  src=$(share_file omarchy-menu-blackomarchy.jsonc)
+  local merger target
+  merger=$(share_file merge-omarchy-menu.py)
+  target="$home/.config/omarchy/extensions/omarchy-menu.jsonc"
+  if [[ -f $src && -f $merger ]] && have_cmd python3; then
+    as_owner "$owner" python3 "$merger" "$src" "$target" install
+    [[ -n $owner ]] && chown "$owner:$owner" "$target" 2>/dev/null || true
+    append_manifest_line "file	${target}	menu"
+    if have_cmd omarchy; then
+      as_owner "$owner" omarchy menu refresh >/dev/null 2>&1 || true
+    fi
   fi
-  [[ -f $src ]] || return 0
-  install -m 0755 "$src" "$dest/blackomarchy-blackarch.sh"
-  if have_cmd chown && [[ -n $owner ]]; then
-    chown "$owner:$owner" "$dest/blackomarchy-blackarch.sh" 2>/dev/null || true
-  fi
-  append_manifest_line "file	${dest}/blackomarchy-blackarch.sh	hook"
 }
 
 install_cli() {
@@ -47,11 +106,24 @@ install_cli() {
   install -m 0644 "$root"/lib/*.sh "$dest_share/lib/"
   install -m 0644 "$root"/packages/*.txt "$dest_share/packages/"
   install -m 0644 "$root/config/paths.conf" "$dest_share/config/"
-  if [[ -f $root/share/hooks/blackomarchy-blackarch.sh ]]; then
-    install -m 0755 "$root/share/hooks/blackomarchy-blackarch.sh" \
-      "$dest_share/share/hooks/"
+  install -d -m 0755 "$dest_share/share/hooks"
+  if [[ -d $root/share/hooks ]]; then
+    install -m 0755 "$root"/share/hooks/* "$dest_share/share/hooks/"
   fi
+  for f in blackomarchy-reappend-repo blackomarchy-omarchy-install merge-omarchy-menu.py omarchy-menu-blackomarchy.jsonc; do
+    if [[ -f $root/share/$f ]]; then
+      install -m 0755 "$root/share/$f" "$dest_share/share/$f"
+      install -m 0755 "$root/share/$f" "$dest_share/$f"
+    fi
+  done
   install -m 0755 "$root/blackomarchy" "$dest_bin/blackomarchy"
+  install -m 0755 "$root/bootstrap.sh" "$dest_share/bootstrap.sh"
+  install -m 0755 "$root/uninstall.sh" "$dest_share/uninstall.sh"
+  if [[ -f $root/share/blackomarchy-omarchy-install ]]; then
+    install -m 0755 "$root/share/blackomarchy-omarchy-install" \
+      "$dest_bin/blackomarchy-omarchy-install"
+    append_manifest_line "file	${dest_bin}/blackomarchy-omarchy-install	helper"
+  fi
   if [[ -f $root/share/blackomarchy-reappend-repo ]]; then
     install -m 0755 "$root/share/blackomarchy-reappend-repo" \
       /usr/local/sbin/blackomarchy-reappend-repo
@@ -60,12 +132,20 @@ install_cli() {
   printf '%s\n' "$BLACKOMARCHY_VERSION" >"$(state_dir)/version"
   append_manifest_line "file	${dest_bin}/blackomarchy	cli"
   append_manifest_line "file	${dest_share}	share"
-  install_pre_refresh_hook
+  install_omarchy_integration
   log "CLI installed to $dest_bin/blackomarchy"
 }
 
 remove_pre_refresh_hook() {
-  local home
+  local home owner merger src target
   home=$(invoking_home)
+  owner=$(invoking_user)
   rm -f "$home/.config/omarchy/hooks/pre-refresh-pacman.d/blackomarchy-blackarch.sh" 2>/dev/null || true
+  rm -f "$home/.config/omarchy/hooks/post-update.d/blackomarchy-post-update.sh" 2>/dev/null || true
+  merger=$(share_file merge-omarchy-menu.py)
+  src=$(share_file omarchy-menu-blackomarchy.jsonc)
+  target="$home/.config/omarchy/extensions/omarchy-menu.jsonc"
+  if [[ -f $merger && -f $src ]] && have_cmd python3; then
+    as_owner "$owner" python3 "$merger" "$src" "$target" uninstall || true
+  fi
 }

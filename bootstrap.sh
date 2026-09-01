@@ -31,6 +31,8 @@ ensure_state_dir
 create_backup >/dev/null
 if [[ ! -f $(baseline_dir)/omarchy-version ]]; then
   capture_baseline
+else
+  refresh_baseline_if_omarchy_moved
 fi
 
 log "Omarchy $(omarchy_version_string | tr '\n' ' ')"
@@ -46,5 +48,6 @@ log "done"
 log "BlackArch repository: enabled"
 log "default profile: core"
 log "CLI: blackomarchy status | verify | profiles"
-log "Omarchy desktop, update path, and configuration were not modified"
-log "keep using: omarchy update"
+log "Omarchy-owned files were not modified"
+log "keep using: omarchy update  (BlackArch packages update in that transaction)"
+log "add/remove from the Omarchy menu: Install/Remove > Black omARCHy"

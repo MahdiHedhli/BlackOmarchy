@@ -49,7 +49,8 @@ Usage: blackomarchy <command>
   profiles            List curated profiles
   install <profile>   Install a curated profile (or "all")
   remove <profile>    Remove packages recorded for a profile
-  doctor              Detection, pacman.conf, and guard checks
+  doctor              Detection, pacman.conf, hooks, and guard checks
+  recapture-baseline  Refresh the Omarchy pin after omarchy update
   help                Show this help
 EOF
 }
@@ -114,6 +115,11 @@ cmd_remove() {
   remove_profile "$profile"
 }
 
+cmd_recapture_baseline() {
+  require_root
+  capture_baseline
+}
+
 cmd_doctor() {
   printf 'arch: %s\n' "$(uname -m)"
   printf 'os-release ID: %s\n' "$(read_os_id 2>/dev/null || printf missing)"
@@ -136,6 +142,26 @@ cmd_doctor() {
   if [[ -n ${OMARCHY_ALLOW_DIRECT_PACMAN:-} ]]; then
     printf 'warning: OMARCHY_ALLOW_DIRECT_PACMAN is set in this environment\n'
   fi
+  local home
+  home=$(invoking_home)
+  printf 'pre-refresh hook: '
+  if [[ -x $home/.config/omarchy/hooks/pre-refresh-pacman.d/blackomarchy-blackarch.sh ]]; then
+    printf 'present\n'
+  else
+    printf 'missing\n'
+  fi
+  printf 'post-update hook: '
+  if [[ -x $home/.config/omarchy/hooks/post-update.d/blackomarchy-post-update.sh ]]; then
+    printf 'present\n'
+  else
+    printf 'missing\n'
+  fi
+  printf 'reappend helper: '
+  if [[ -x /usr/local/sbin/blackomarchy-reappend-repo ]]; then
+    printf 'present\n'
+  else
+    printf 'missing\n'
+  fi
   printf 'doctor does not read private/ or print secret values\n'
 }
 
@@ -149,6 +175,7 @@ main() {
     install) cmd_install "$@" ;;
     remove) cmd_remove "$@" ;;
     doctor) cmd_doctor "$@" ;;
+    recapture-baseline) cmd_recapture_baseline "$@" ;;
     help|-h|--help) usage ;;
     *) usage >&2; exit 2 ;;
   esac

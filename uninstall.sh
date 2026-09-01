@@ -70,6 +70,8 @@ fi
 
 rm -rf /usr/local/share/blackomarchy
 rm -f /usr/local/bin/blackomarchy /usr/local/sbin/blackomarchy-reappend-repo
+# Keep blackomarchy-omarchy-install and the seeded source tree so
+# Install > Black omARCHy still works, same as other optional apps.
 if [[ $remove_failed -ne 0 ]]; then
   err "some manifest packages could not be removed"
   exit 1
@@ -79,3 +81,4 @@ rm -f "$(state_dir)/version"
 
 log "Black omARCHy removed. Pacman keyring files were left in place."
 log "Omarchy-owned files were not modified."
+log "Re-add from the Omarchy menu: Install > Black omARCHy"

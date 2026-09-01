@@ -72,6 +72,44 @@ The script:
 Re-running bootstrap is safe. It will not duplicate `[blackarch]` or
 re-run `strap.sh` when the repo is already enabled.
 
+After install, Omarchy's menu grows three additive entries (no
+upstream files are patched):
+
+- Install > Black omARCHy
+- Remove > Black omARCHy
+- Security (status, verify, and a few installed tools)
+
+Install and Remove use the same floating terminal Omarchy uses for
+Chrome, 1Password, and other optional apps.
+
+## Updating
+
+Keep using Omarchy's update command. There is no separate Black omARCHy
+updater.
+
+```bash
+omarchy update
+```
+
+That path is `pacman -Syu` with Omarchy's snapshot and migrations.
+With `[blackarch]` still in `pacman.conf`, BlackArch packages update in
+the same transaction as the rest of the system. Do not replace this
+with a raw `pacman -Syu`.
+
+Omarchy can rewrite `pacman.conf` from a channel template
+(`omarchy refresh pacman`, some migrations). That is the step that
+would otherwise drop `[blackarch]`. Black omARCHy installs the
+documented user hooks so the stanza is restored automatically:
+
+- `~/.config/omarchy/hooks/pre-refresh-pacman.d/blackomarchy-blackarch.sh`
+  runs after the template is copied and before `pacman -Syyuu`
+- `~/.config/omarchy/hooks/post-update.d/blackomarchy-post-update.sh`
+  runs at the end of `omarchy update` if a migration rewrote the file
+
+In both cases `[blackarch]` is appended last, so core/extra/omarchy
+keep package-name priority. The layer is not a fork and does not
+replace Omarchy's update binary.
+
 ## Package profiles
 
 Default install is `core` only.
@@ -105,18 +143,6 @@ blackomarchy doctor
 `verify` fails if Omarchy-owned files, the Omarchy repo line, or Omarchy
 packages drifted.
 
-## Updating
-
-Keep using Omarchy's update command:
-
-```bash
-omarchy update
-```
-
-Do not replace it with `pacman -Syu`. Black omARCHy installs a
-user-owned hook so `omarchy refresh pacman` can put the BlackArch
-stanza back after Omarchy rewrites `pacman.conf`.
-
 ## Uninstall
 
 ```bash
@@ -145,7 +171,7 @@ corruption and split-brain, not a compromise of blackarch.org itself.
 - Some profile candidates will be missing or excluded on a given host
 - BlackArch tools that share a name with Arch `extra` keep the
   Omarchy/Arch version because `[blackarch]` is appended last
-- v0.1 does not add menu entries, themes, or keybindings
+- v0.1 does not add themes or keybindings; menu entries are an overlay only
 - `hydra` pulls a large extra dependency set (including freerdp and
   subversion). That did not upgrade Omarchy's own packages.
 - `omarchy update -y` over a non-interactive SSH session may still hit

@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
-# Root-owned helper. Re-append [blackarch] using the same rules as lib/pacman.sh.
+# Root-owned helper. Re-append [blackarch] after Omarchy rewrites pacman.conf.
+# BlackArch stays last so core/extra/omarchy keep package-name priority.
 set -euo pipefail
 
 if [[ ${EUID:-$(id -u)} -ne 0 ]]; then
-  exec sudo -n "$0" "$@"
+  exec sudo "$0" "$@"
 fi
 
 LIB=/usr/local/share/blackomarchy/lib
+if [[ ! -f $LIB/common.sh ]]; then
+  printf 'blackomarchy-reappend-repo: Black omARCHy is not installed\n' >&2
+  exit 1
+fi
 # shellcheck disable=SC1091
 source "$LIB/common.sh"
 load_paths
@@ -17,4 +22,7 @@ if [[ ! -f /etc/pacman.d/blackarch-mirrorlist ]]; then
   printf 'blackomarchy-reappend-repo: blackarch-mirrorlist missing\n' >&2
   exit 1
 fi
+
+require_omarchy_repos
 append_blackarch_stanza
+assert_single_blackarch

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Same floating-terminal entry Omarchy uses for optional apps.
+# Prefer a seeded local tree; otherwise clone the public repo.
+set -euo pipefail
+
+SRC="${BLACKOMARCHY_SRC:-$HOME/.local/share/blackomarchy-src}"
+URL="${BLACKOMARCHY_GIT_URL:-https://github.com/MahdiHedhli/BlackOmarchy.git}"
+
+if [[ -x $SRC/bootstrap.sh ]]; then
+  if [[ -d $SRC/.git ]] && [[ -z $(git -C "$SRC" status --porcelain 2>/dev/null || true) ]]; then
+    git -C "$SRC" pull --ff-only || true
+  fi
+else
+  mkdir -p "$(dirname "$SRC")"
+  git clone --depth 1 "$URL" "$SRC"
+fi
+
+exec sudo "$SRC/bootstrap.sh"

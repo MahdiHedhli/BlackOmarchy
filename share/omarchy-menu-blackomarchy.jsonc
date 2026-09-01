@@ -1,0 +1,106 @@
+{
+  "install.blackomarchy": {
+    "icon": "󰯂",
+    "label": "Black omARCHy",
+    "description": "Add the official BlackArch layer to this Omarchy install",
+    "disabled": "test -f /var/lib/blackomarchy/version",
+    "action": "omarchy-launch-floating-terminal-with-presentation blackomarchy-omarchy-install"
+  },
+  "remove.blackomarchy": {
+    "icon": "󰯂",
+    "label": "Black omARCHy",
+    "description": "Remove the BlackArch layer; leave Omarchy as it was",
+    "when": "test -f /var/lib/blackomarchy/version",
+    "action": "omarchy-launch-floating-terminal-with-presentation 'sudo /usr/local/share/blackomarchy/uninstall.sh'"
+  },
+  "install.security": {
+    "icon": "󰯂",
+    "label": "Security tools",
+    "description": "Curated Black omARCHy profiles",
+    "when": "test -f /var/lib/blackomarchy/version"
+  },
+  "install.security.web": {
+    "icon": "󰖟",
+    "label": "Web",
+    "when": "test -f /var/lib/blackomarchy/version",
+    "action": "omarchy-launch-floating-terminal-with-presentation 'sudo blackomarchy install web'"
+  },
+  "install.security.recon": {
+    "icon": "󰭎",
+    "label": "Recon",
+    "when": "test -f /var/lib/blackomarchy/version",
+    "action": "omarchy-launch-floating-terminal-with-presentation 'sudo blackomarchy install recon'"
+  },
+  "install.security.network": {
+    "icon": "󰛳",
+    "label": "Network",
+    "when": "test -f /var/lib/blackomarchy/version",
+    "action": "omarchy-launch-floating-terminal-with-presentation 'sudo blackomarchy install network'"
+  },
+  "install.security.wireless": {
+    "icon": "󰖩",
+    "label": "Wireless",
+    "when": "test -f /var/lib/blackomarchy/version",
+    "action": "omarchy-launch-floating-terminal-with-presentation 'sudo blackomarchy install wireless'"
+  },
+  "install.security.reversing": {
+    "icon": "󰣪",
+    "label": "Reversing",
+    "when": "test -f /var/lib/blackomarchy/version",
+    "action": "omarchy-launch-floating-terminal-with-presentation 'sudo blackomarchy install reversing'"
+  },
+  "install.security.forensics": {
+    "icon": "󰷐",
+    "label": "Forensics",
+    "when": "test -f /var/lib/blackomarchy/version",
+    "action": "omarchy-launch-floating-terminal-with-presentation 'sudo blackomarchy install forensics'"
+  },
+  "install.security.password": {
+    "icon": "󰌆",
+    "label": "Password",
+    "when": "test -f /var/lib/blackomarchy/version",
+    "action": "omarchy-launch-floating-terminal-with-presentation 'sudo blackomarchy install password'"
+  },
+  "security": {
+    "icon": "󰯂",
+    "label": "Security",
+    "description": "Black omARCHy tools and status",
+    "when": "test -f /var/lib/blackomarchy/version"
+  },
+  "security.status": {
+    "icon": "󰋼",
+    "label": "Status",
+    "when": "test -f /var/lib/blackomarchy/version",
+    "action": "omarchy-launch-floating-terminal-with-presentation 'blackomarchy status; echo; blackomarchy doctor; read -r _'"
+  },
+  "security.verify": {
+    "icon": "󰄬",
+    "label": "Verify",
+    "when": "test -f /var/lib/blackomarchy/version",
+    "action": "omarchy-launch-floating-terminal-with-presentation blackomarchy verify"
+  },
+  "security.nmap": {
+    "icon": "󰛳",
+    "label": "nmap",
+    "when": "command -v nmap >/dev/null",
+    "action": "xdg-terminal-exec --app-id=org.omarchy.terminal --title=nmap -e bash -lc nmap"
+  },
+  "security.sqlmap": {
+    "icon": "󰆼",
+    "label": "sqlmap",
+    "when": "command -v sqlmap >/dev/null",
+    "action": "xdg-terminal-exec --app-id=org.omarchy.terminal --title=sqlmap -e bash -lc sqlmap"
+  },
+  "security.hashcat": {
+    "icon": "󰌆",
+    "label": "hashcat",
+    "when": "command -v hashcat >/dev/null",
+    "action": "xdg-terminal-exec --app-id=org.omarchy.terminal --title=hashcat -e bash -lc hashcat"
+  },
+  "security.wireshark": {
+    "icon": "󰖟",
+    "label": "wireshark-cli",
+    "when": "command -v tshark >/dev/null",
+    "action": "xdg-terminal-exec --app-id=org.omarchy.terminal --title=tshark -e bash -lc tshark"
+  }
+}

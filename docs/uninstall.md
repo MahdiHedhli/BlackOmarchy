@@ -6,12 +6,21 @@ From the project checkout:
 sudo ./uninstall.sh
 ```
 
+From the Omarchy menu: Remove > Black omARCHy.
+
 This removes:
 
 - the `[blackarch]` pacman stanza (parser, not a blunt sed)
 - packages listed in `/var/lib/blackomarchy/manifest`
-- the `blackomarchy` CLI and `/usr/local/share/blackomarchy`
-- the user-owned `pre-refresh-pacman.d` hook
+- the `blackomarchy` CLI, reappend helper, and `/usr/local/share/blackomarchy`
+- the user-owned `pre-refresh-pacman.d` and `post-update.d` hooks
+- Security / profile rows from the menu overlay
+
+It keeps, so re-add is the same gesture as any other optional app:
+
+- `/usr/local/bin/blackomarchy-omarchy-install`
+- Install > Black omARCHy in the menu overlay
+- `~/.local/share/blackomarchy-src` (seeded checkout)
 
 It does not:
 
@@ -22,4 +31,5 @@ It does not:
 
 BlackArch keyring files under `/usr/share/pacman/keyrings/` are left
 in place. They do not affect pacman once the `[blackarch]` stanza is
-gone.
+gone. Re-install from Install > Black omARCHy re-appends the stanza
+without re-running `strap.sh` when those files are still present.

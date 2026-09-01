@@ -225,12 +225,34 @@ run_official_strap() {
   log "BlackArch repository enabled"
 }
 
+blackarch_keyring_present() {
+  local dest f
+  dest=$(blackomarchy_path /usr/share/pacman/keyrings)
+  [[ -d $dest ]] || return 1
+  for f in "$dest"/blackarch*; do
+    [[ -f $f ]] && return 0
+  done
+  return 1
+}
+
 ensure_blackarch_repo() {
   require_omarchy_repos
-  if should_run_strap; then
-    run_official_strap
-  else
+  if repo_enabled blackarch; then
     log "enabled blackarch repository already present; skipping strap.sh"
     assert_single_blackarch
+    return 0
   fi
+  if blackarch_ambiguous; then
+    die "ambiguous [blackarch] configuration in pacman.conf (commented or disabled stanza)"
+  fi
+  # Channel refresh copies a template over pacman.conf and drops [blackarch].
+  # Keyring + mirrorlist survive; put the stanza back instead of re-running strap.
+  if [[ -f $(blackomarchy_path /etc/pacman.d/blackarch-mirrorlist) ]] && blackarch_keyring_present; then
+    log "BlackArch keyring present; re-appending [blackarch] after pacman.conf rewrite"
+    append_blackarch_stanza
+    assert_single_blackarch
+    repo_enabled blackarch || die "failed to re-enable the blackarch repository"
+    return 0
+  fi
+  run_official_strap
 }
