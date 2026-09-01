@@ -68,8 +68,13 @@ else
   remove_blackarch_stanza_from_file
 fi
 
+if [[ -x /usr/local/sbin/blackomarchy-apply-login-branding ]]; then
+  /usr/local/sbin/blackomarchy-apply-login-branding restore || true
+fi
 rm -rf /usr/local/share/blackomarchy
-rm -f /usr/local/bin/blackomarchy /usr/local/sbin/blackomarchy-reappend-repo
+rm -f /usr/local/bin/blackomarchy \
+  /usr/local/sbin/blackomarchy-reappend-repo \
+  /usr/local/sbin/blackomarchy-apply-login-branding
 # Keep blackomarchy-omarchy-install and the seeded source tree so
 # Install > Black omARCHy still works, same as other optional apps.
 if [[ $remove_failed -ne 0 ]]; then

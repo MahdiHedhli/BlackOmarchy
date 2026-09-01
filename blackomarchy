@@ -162,6 +162,12 @@ cmd_doctor() {
   else
     printf 'missing\n'
   fi
+  printf 'login overlay: '
+  if [[ -x /usr/local/sbin/blackomarchy-apply-login-branding && -f /usr/local/share/blackomarchy/share/branding/login-logo.png ]]; then
+    printf 'present\n'
+  else
+    printf 'missing\n'
+  fi
   printf 'doctor does not read private/ or print secret values\n'
 }
 

@@ -110,12 +110,19 @@ install_cli() {
   if [[ -d $root/share/hooks ]]; then
     install -m 0755 "$root"/share/hooks/* "$dest_share/share/hooks/"
   fi
-  for f in blackomarchy-reappend-repo blackomarchy-omarchy-install merge-omarchy-menu.py omarchy-menu-blackomarchy.jsonc; do
+  for f in blackomarchy-reappend-repo blackomarchy-omarchy-install blackomarchy-apply-login-branding merge-omarchy-menu.py omarchy-menu-blackomarchy.jsonc; do
     if [[ -f $root/share/$f ]]; then
       install -m 0755 "$root/share/$f" "$dest_share/share/$f"
       install -m 0755 "$root/share/$f" "$dest_share/$f"
     fi
   done
+  if [[ -d $root/share/branding ]]; then
+    install -d -m 0755 "$dest_share/share/branding"
+    if [[ -f $root/share/branding/login-logo.png ]]; then
+      install -m 0644 "$root/share/branding/login-logo.png" \
+        "$dest_share/share/branding/login-logo.png"
+    fi
+  fi
   install -m 0755 "$root/blackomarchy" "$dest_bin/blackomarchy"
   install -m 0755 "$root/bootstrap.sh" "$dest_share/bootstrap.sh"
   install -m 0755 "$root/uninstall.sh" "$dest_share/uninstall.sh"
@@ -129,10 +136,18 @@ install_cli() {
       /usr/local/sbin/blackomarchy-reappend-repo
     append_manifest_line "file	/usr/local/sbin/blackomarchy-reappend-repo	helper"
   fi
+  if [[ -f $root/share/blackomarchy-apply-login-branding ]]; then
+    install -m 0755 "$root/share/blackomarchy-apply-login-branding" \
+      /usr/local/sbin/blackomarchy-apply-login-branding
+    append_manifest_line "file	/usr/local/sbin/blackomarchy-apply-login-branding	helper"
+  fi
   printf '%s\n' "$BLACKOMARCHY_VERSION" >"$(state_dir)/version"
   append_manifest_line "file	${dest_bin}/blackomarchy	cli"
   append_manifest_line "file	${dest_share}	share"
   install_omarchy_integration
+  if [[ -x /usr/local/sbin/blackomarchy-apply-login-branding ]]; then
+    /usr/local/sbin/blackomarchy-apply-login-branding apply || true
+  fi
   log "CLI installed to $dest_bin/blackomarchy"
 }
 

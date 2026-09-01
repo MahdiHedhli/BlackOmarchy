@@ -15,6 +15,7 @@ This removes:
 - the `blackomarchy` CLI, reappend helper, and `/usr/local/share/blackomarchy`
 - the user-owned `pre-refresh-pacman.d` and `post-update.d` hooks
 - Security / profile rows from the menu overlay
+- the SDDM greeter logo overlay (Omarchy's original `logo.png` is restored)
 
 It keeps, so re-add is the same gesture as any other optional app:
 

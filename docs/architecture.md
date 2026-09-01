@@ -31,6 +31,9 @@ The layer owns:
 - `~/.config/omarchy/hooks/pre-refresh-pacman.d/blackomarchy-blackarch.sh`
 - `~/.config/omarchy/hooks/post-update.d/blackomarchy-post-update.sh`
 - Black omARCHy keys in `~/.config/omarchy/extensions/omarchy-menu.jsonc`
+- SDDM greeter `logo.png` overlay (Omarchy wordmark plus a BLACK caption
+  and the BlackArch katana through the A). `Main.qml` is not patched.
+  Uninstall restores the backed-up Omarchy logo.
 
 It does not own Hyprland, Omarchy shell, themes, keybindings,
 mirrors, or the Omarchy update binary. Extension files live under

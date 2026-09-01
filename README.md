@@ -82,6 +82,11 @@ upstream files are patched):
 Install and Remove use the same floating terminal Omarchy uses for
 Chrome, 1Password, and other optional apps.
 
+The SDDM login screen keeps Omarchy's greeter and colors. Bootstrap
+overlays `logo.png` with a small BLACK caption (BlackArch-like
+geometric sans) above the existing pixel OMARCHY wordmark, and the
+BlackArch katana through the A. Uninstall puts Omarchy's logo back.
+
 ## Updating
 
 Keep using Omarchy's update command. There is no separate Black omARCHy
