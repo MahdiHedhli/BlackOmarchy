@@ -94,6 +94,30 @@ install_omarchy_integration() {
       as_owner "$owner" omarchy menu refresh >/dev/null 2>&1 || true
     fi
   fi
+
+  install_agent_skills
+}
+
+install_agent_skills() {
+  local home owner root src dest_root skill name
+  home=$(invoking_home)
+  owner=$(invoking_user)
+  root=$(project_root_from_lib)
+  src="$root/share/skills"
+  [[ -n $home && $home != /root && -d $src ]] || return 0
+  for dest_root in "$home/.grok/skills" "$home/.claude/skills" "$home/.agents/skills"; do
+    as_owner "$owner" mkdir -p "$dest_root"
+    for skill in "$src"/*; do
+      [[ -d $skill ]] || continue
+      name=$(basename "$skill")
+      as_owner "$owner" mkdir -p "$dest_root/$name"
+      cp -a "$skill"/. "$dest_root/$name"/
+      if [[ -n $owner && $owner != root ]]; then
+        chown -R "$owner:$owner" "$dest_root/$name" 2>/dev/null || true
+      fi
+      append_manifest_line "file	${dest_root}/${name}	skill"
+    done
+  done
 }
 
 install_cli() {
@@ -122,6 +146,10 @@ install_cli() {
       install -m 0644 "$root/share/branding/login-logo.png" \
         "$dest_share/share/branding/login-logo.png"
     fi
+  fi
+  if [[ -d $root/share/skills ]]; then
+    install -d -m 0755 "$dest_share/share/skills"
+    cp -a "$root/share/skills"/. "$dest_share/share/skills"/
   fi
   install -m 0755 "$root/blackomarchy" "$dest_bin/blackomarchy"
   install -m 0755 "$root/bootstrap.sh" "$dest_share/bootstrap.sh"
@@ -163,4 +191,10 @@ remove_pre_refresh_hook() {
   if [[ -f $merger && -f $src ]] && have_cmd python3; then
     as_owner "$owner" python3 "$merger" "$src" "$target" uninstall || true
   fi
+  local dest_root name
+  for dest_root in "$home/.grok/skills" "$home/.claude/skills" "$home/.agents/skills"; do
+    for name in black-omarchy black-omarchy-pentest; do
+      rm -rf "$dest_root/$name"
+    done
+  done
 }

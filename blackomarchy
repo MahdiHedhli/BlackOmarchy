@@ -168,6 +168,12 @@ cmd_doctor() {
   else
     printf 'missing\n'
   fi
+  printf 'agent skills: '
+  if [[ -f $home/.grok/skills/black-omarchy/SKILL.md && -f $home/.grok/skills/black-omarchy-pentest/SKILL.md ]]; then
+    printf 'present\n'
+  else
+    printf 'missing\n'
+  fi
   printf 'doctor does not read private/ or print secret values\n'
 }
 
