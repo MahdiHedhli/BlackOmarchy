@@ -69,6 +69,45 @@ logo_digest() {
   fi
 }
 
+# Live UKI path hashes in limine.conf must match the file we just
+# wrote. Cloned machine-id leftovers and a later snapper-sync can
+# leave a stale #blake2b on boot():/EFI/Linux/omarchy_linux.efi, and
+# Limine then stops on "hash does not match" before Plymouth.
+sync_limine_live_uki_hash() {
+  local conf=${BLACKOMARCHY_LIMINE_CONF:-/boot/limine.conf}
+  local uki=${BLACKOMARCHY_UKI:-/boot/EFI/Linux/omarchy_linux.efi}
+  local hash extra
+  [[ -f $conf && -f $uki ]] || return 0
+  if command -v b2sum >/dev/null 2>&1; then
+    hash=$(b2sum "$uki" | awk '{print $1}')
+  else
+    return 0
+  fi
+  [[ $hash =~ ^[0-9a-f]{128}$ ]] || return 0
+  rewrite_limine_live_hash() {
+    python3 - "$1" "$hash" <<'PY'
+import pathlib, re, sys
+conf = pathlib.Path(sys.argv[1])
+digest = sys.argv[2]
+text = conf.read_text()
+new = re.sub(
+    r"(boot\(\):/EFI/Linux/omarchy_linux\.efi)#(?:[0-9a-fA-F]{128})",
+    r"\1#" + digest,
+    text,
+)
+if new != text:
+    conf.write_text(new)
+PY
+  }
+  rewrite_limine_live_hash "$conf"
+  local extra
+  for extra in /boot/EFI/limine/limine.conf /boot/EFI/Limine/limine.conf; do
+    if [[ -f $extra && $extra != "$conf" ]]; then
+      rewrite_limine_live_hash "$extra"
+    fi
+  done
+}
+
 # Same post-publish steps Omarchy's plymouth-set uses after copying
 # assets: pin the theme, then rebuild initramfs so the splash survives
 # reboot. Skip when the baked digest already matches the live file.
@@ -93,6 +132,7 @@ rebuild_plymouth_initramfs() {
     printf 'blackomarchy: no limine-mkinitcpio or mkinitcpio; reboot splash not baked into initramfs\n' >&2
     return 1
   fi
+  sync_limine_live_uki_hash || true
   printf '%s\n' "$digest" >"$PLYMOUTH_STAMP"
 }
 
@@ -126,8 +166,11 @@ case $mode in
       rm -f "$PLYMOUTH_STAMP"
     fi
     ;;
+  sync-limine)
+    sync_limine_live_uki_hash
+    ;;
   *)
-    printf 'usage: blackomarchy-apply-login-branding [apply|apply-sddm|restore]\n' >&2
+    printf 'usage: blackomarchy-apply-login-branding [apply|apply-sddm|restore|sync-limine]\n' >&2
     exit 2
     ;;
 esac

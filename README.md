@@ -167,9 +167,17 @@ sudo /usr/local/sbin/blackomarchy-apply-login-branding apply
 ```
 
 That copies the wordmark onto SDDM and Plymouth, then rebuilds
-initramfs. A oneshot before `sddm` re-applies the greeter overlay on
-boot so a packaged refresh cannot keep the stock login logo. The
-Plymouth bake is skipped when the live splash already matches.
+initramfs and refreshes the live UKI Blake2b hash in `limine.conf`.
+A oneshot before `sddm` re-applies the greeter overlay on boot so a
+packaged refresh cannot keep the stock login logo. The Plymouth bake
+is skipped when the live splash already matches.
+
+If reboot stops on `Blake2b hash for URI ... does not match`, press
+`Y` once to continue, then:
+
+```bash
+sudo /usr/local/sbin/blackomarchy-apply-login-branding sync-limine
+```
 
 ## Package profiles
 

@@ -55,4 +55,26 @@ rc=$?
 set -e
 [[ $rc -eq 2 ]] || exit 1
 
+mkdir -p "$tmp/bin"
+cat >"$tmp/bin/b2sum" <<'EOF'
+#!/usr/bin/env bash
+printf '%s  %s\n' "$(printf 'c%.0s' {1..128})" "$1"
+EOF
+chmod +x "$tmp/bin/b2sum"
+export PATH="$tmp/bin:$PATH"
+printf 'uki-bytes' >"$tmp/uki.efi"
+stale_a=$(printf 'a%.0s' {1..128})
+stale_b=$(printf 'b%.0s' {1..128})
+hash=$(b2sum "$tmp/uki.efi" | awk '{print $1}')
+cat >"$tmp/limine.conf" <<EOF
+default_entry: 2
+  path: boot():/EFI/Linux/omarchy_linux.efi#${stale_a}
+  path: boot():/01ac/limine_history/omarchy_linux.efi_sha256_dead#${stale_b}
+EOF
+export BLACKOMARCHY_LIMINE_CONF="$tmp/limine.conf"
+export BLACKOMARCHY_UKI="$tmp/uki.efi"
+bash "$HELPER" sync-limine
+grep -q "omarchy_linux.efi#${hash}" "$tmp/limine.conf" || exit 1
+grep -q "limine_history/omarchy_linux.efi_sha256_dead#${stale_b}" "$tmp/limine.conf" || exit 1
+
 echo "ok branding overlay"
