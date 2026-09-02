@@ -210,6 +210,9 @@ install_cli() {
       /usr/local/sbin/blackomarchy-apply-login-branding
     append_manifest_line "file	/usr/local/sbin/blackomarchy-apply-login-branding	helper"
   fi
+  printf '%s\n' "$BLACKOMARCHY_VERSION" >"$(state_dir)/version"
+  append_manifest_line "file	${dest_bin}/blackomarchy	cli"
+  append_manifest_line "file	${dest_share}	share"
   if [[ -f $root/share/blackomarchy-sddm-branding.service ]]; then
     install -m 0644 "$root/share/blackomarchy-sddm-branding.service" \
       /etc/systemd/system/blackomarchy-sddm-branding.service
@@ -217,9 +220,6 @@ install_cli() {
     systemctl enable --now blackomarchy-sddm-branding.service >/dev/null 2>&1 || true
     append_manifest_line "file	/etc/systemd/system/blackomarchy-sddm-branding.service	unit"
   fi
-  printf '%s\n' "$BLACKOMARCHY_VERSION" >"$(state_dir)/version"
-  append_manifest_line "file	${dest_bin}/blackomarchy	cli"
-  append_manifest_line "file	${dest_share}	share"
   install_omarchy_integration
   if [[ -x /usr/local/sbin/blackomarchy-apply-login-branding ]]; then
     /usr/local/sbin/blackomarchy-apply-login-branding apply || true
