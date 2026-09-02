@@ -85,7 +85,9 @@ cmd_verify() {
   assert_single_blackarch
   repo_enabled blackarch || die "blackarch repository is not enabled"
   if [[ -d $(baseline_dir) ]]; then
-    baseline_compare || die "Omarchy baseline drift detected"
+    if ! baseline_compare; then
+      die "Omarchy baseline drift detected (sudo blackomarchy recapture-baseline if this followed install or omarchy update)"
+    fi
   else
     die "no baseline snapshot (was bootstrap run?)"
   fi

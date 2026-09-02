@@ -40,7 +40,8 @@ signing material, curated packages, and its own CLI and state files.
 ## Prerequisites
 
 - A clean, supported Omarchy 4.x install (packaged `omarchy`, not
-  `omarchy-dev`)
+  `omarchy-dev`). v0.1 was checked on 4.0.1 and 4.0.2. The latest
+  ISO is currently 4.0.2; we do not pin a single patch level.
 - `x86_64`
 - Root via `sudo`
 - Network access to `blackarch.org` and `www.blackarch.org`
@@ -148,9 +149,26 @@ keep package-name priority. The layer is not a fork and does not
 replace Omarchy's update binary.
 
 `omarchy update` does **not** git-pull this repo. To pick up new
-skills, hooks, or the login wordmark, pull and re-run
-`sudo ./bootstrap.sh` (or Install > Black omARCHy). That is
-idempotent.
+skills, hooks, or the login wordmark, pull and re-run bootstrap:
+
+```bash
+cd BlackOmarchy   # or wherever you cloned it
+git pull --ff-only
+sudo ./bootstrap.sh
+sudo blackomarchy recapture-baseline
+blackomarchy verify
+```
+
+That is idempotent. If the greeter still shows stock OMARCHY after a
+reboot:
+
+```bash
+sudo /usr/local/sbin/blackomarchy-apply-login-branding apply
+```
+
+Then log out (or reboot). A oneshot before `sddm` re-applies the
+wordmark on boot so a packaged greeter refresh cannot keep the stock
+logo.
 
 ## Package profiles
 
@@ -182,8 +200,19 @@ blackomarchy verify
 blackomarchy doctor
 ```
 
-`verify` fails if Omarchy-owned files, the Omarchy repo line, or Omarchy
-packages drifted.
+`verify` fails if Omarchy-owned files under `/usr/share/omarchy`, the
+Omarchy repo `Server=` line, or the `omarchy` packages drifted. That is
+not a “you must be on the newest ISO” check.
+
+A fresh install can rewrite files under `~/.config/omarchy` (our menu
+overlay and hooks, plus Omarchy’s own pacman hooks). If `verify` says
+**Omarchy user configuration changed**, the layer is still installed.
+Refresh the pin:
+
+```bash
+sudo blackomarchy recapture-baseline
+blackomarchy verify
+```
 
 ## Uninstall
 

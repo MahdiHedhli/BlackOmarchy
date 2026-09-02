@@ -1,0 +1,14 @@
+[Unit]
+Description=Black omARCHy SDDM login wordmark
+Documentation=https://github.com/MahdiHedhli/BlackOmarchy
+Before=sddm.service
+After=local-fs.target
+ConditionPathExists=/var/lib/blackomarchy/version
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/blackomarchy-apply-login-branding apply
+RemainAfterExit=yes
+
+[Install]
+WantedBy=sddm.service

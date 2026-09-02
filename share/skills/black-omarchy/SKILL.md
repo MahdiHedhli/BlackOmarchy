@@ -37,6 +37,7 @@ sudo ./bootstrap.sh
 | --- | --- |
 | `blackomarchy status` | Repos, version, profiles |
 | `blackomarchy verify` | Omarchy baseline + single `[blackarch]` |
+| `sudo blackomarchy recapture-baseline` | Refresh the Omarchy pin after install or `omarchy update` |
 | `blackomarchy doctor` | Hooks, helper, login overlay |
 | `blackomarchy profiles` | Curated profile names |
 | `sudo blackomarchy install <profile>` | `core`, `web`, `recon`, `network`, `wireless`, `reversing`, `forensics`, `password`, or `all` |

@@ -71,6 +71,11 @@ fi
 if [[ -x /usr/local/sbin/blackomarchy-apply-login-branding ]]; then
   /usr/local/sbin/blackomarchy-apply-login-branding restore || true
 fi
+if [[ -f /etc/systemd/system/blackomarchy-sddm-branding.service ]]; then
+  systemctl disable --now blackomarchy-sddm-branding.service >/dev/null 2>&1 || true
+  rm -f /etc/systemd/system/blackomarchy-sddm-branding.service
+  systemctl daemon-reload || true
+fi
 rm -rf /usr/local/share/blackomarchy
 rm -f /usr/local/bin/blackomarchy \
   /usr/local/sbin/blackomarchy-reappend-repo \

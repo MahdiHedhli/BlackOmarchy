@@ -31,7 +31,7 @@ hash_tree() {
 # Files this layer writes under ~/.config/omarchy. Omarchy owns the
 # directories; we own these drop-ins and must not treat them as drift.
 owned_omarchy_user_path_regex() {
-  printf '%s' 'hooks/(pre-refresh-pacman|post-update)\.d/blackomarchy|/extensions/omarchy-menu\.jsonc'
+  printf '%s' 'hooks/(pre-refresh-pacman|post-update|post-boot)\.d/blackomarchy|/extensions/omarchy-menu\.jsonc'
 }
 
 hash_omarchy_user_tree() {
@@ -92,6 +92,44 @@ refresh_baseline_if_omarchy_moved() {
   fi
 }
 
+# Hyprland / ~/.config/omarchy can change during core package install
+# (Omarchy pacman hooks, first-run, our menu/hook overlays). Recapture
+# those lists after install so verify does not treat that as layer damage.
+refresh_user_config_hashes() {
+  local dest home
+  dest=$(baseline_dir)
+  home=$(invoking_home)
+  [[ -d $dest ]] || return 0
+  if [[ -n $home && -d $home/.config/hypr ]]; then
+    hash_tree "$home/.config/hypr" >"$dest/hypr.hashes" || true
+  fi
+  if [[ -n $home && -d $home/.config/omarchy ]]; then
+    hash_omarchy_user_tree "$home" >"$dest/omarchy-user.hashes" || true
+  fi
+}
+
+hash_paths_only() {
+  awk '{ $1=""; sub(/^ /, ""); print }' "$1" 2>/dev/null | sort
+}
+
+log_hash_drift() {
+  local label=$1 old=$2 new=$3
+  local added removed
+  added=$(comm -13 <(hash_paths_only "$old") <(hash_paths_only "$new") || true)
+  removed=$(comm -23 <(hash_paths_only "$old") <(hash_paths_only "$new") || true)
+  if [[ -n $added ]]; then
+    err "$label added:"
+    printf '%s\n' "$added" | sed 's/^/[blackomarchy]   /' >&2
+  fi
+  if [[ -n $removed ]]; then
+    err "$label removed:"
+    printf '%s\n' "$removed" | sed 's/^/[blackomarchy]   /' >&2
+  fi
+  if [[ -z $added && -z $removed ]]; then
+    err "$label hashes changed (same paths, different contents)"
+  fi
+}
+
 compare_file() {
   local name=$1 a=$2 b=$3
   if ! cmp -s "$a" "$b"; then
@@ -148,8 +186,9 @@ baseline_compare() {
     tmp=$(mktemp)
     hash_tree "$home/.config/hypr" >"$tmp" || true
     if ! cmp -s "$dest/hypr.hashes" "$tmp"; then
-      err "Hyprland user configuration changed"
-      failed=1
+      err "Hyprland user configuration changed (not a version pin; Omarchy hooks or your edits)"
+      log_hash_drift "hypr" "$dest/hypr.hashes" "$tmp"
+      log "refresh the pin with: sudo blackomarchy recapture-baseline"
     fi
     rm -f "$tmp"
   fi
@@ -162,8 +201,9 @@ baseline_compare() {
     grep -vE "$(owned_omarchy_user_path_regex)" "$dest/omarchy-user.hashes" >"$a" || true
     grep -vE "$(owned_omarchy_user_path_regex)" "$tmp" >"$b" || true
     if ! cmp -s "$a" "$b"; then
-      err "Omarchy user configuration changed"
-      failed=1
+      err "Omarchy user configuration changed (menu/hooks/first-run files under ~/.config/omarchy)"
+      log_hash_drift "omarchy user config" "$a" "$b"
+      log "refresh the pin with: sudo blackomarchy recapture-baseline"
     fi
     rm -f "$a" "$b" "$tmp"
   fi

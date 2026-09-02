@@ -64,6 +64,7 @@ install_omarchy_integration() {
   as_owner "$owner" mkdir -p \
     "$home/.config/omarchy/hooks/pre-refresh-pacman.d" \
     "$home/.config/omarchy/hooks/post-update.d" \
+    "$home/.config/omarchy/hooks/post-boot.d" \
     "$home/.config/omarchy/extensions"
 
   src=$(share_file hooks/blackomarchy-blackarch.sh)
@@ -76,6 +77,14 @@ install_omarchy_integration() {
 
   src=$(share_file hooks/blackomarchy-post-update.sh)
   dest="$home/.config/omarchy/hooks/post-update.d/blackomarchy-post-update.sh"
+  if [[ -f $src ]]; then
+    install -m 0755 "$src" "$dest"
+    [[ -n $owner ]] && chown "$owner:$owner" "$dest" 2>/dev/null || true
+    append_manifest_line "file	${dest}	hook"
+  fi
+
+  src=$(share_file hooks/blackomarchy-post-boot.sh)
+  dest="$home/.config/omarchy/hooks/post-boot.d/blackomarchy-post-boot.sh"
   if [[ -f $src ]]; then
     install -m 0755 "$src" "$dest"
     [[ -n $owner ]] && chown "$owner:$owner" "$dest" 2>/dev/null || true
@@ -157,7 +166,7 @@ install_cli() {
   if [[ -d $root/share/hooks ]]; then
     install -m 0755 "$root"/share/hooks/* "$dest_share/share/hooks/"
   fi
-  for f in blackomarchy-reappend-repo blackomarchy-omarchy-install blackomarchy-apply-login-branding merge-omarchy-menu.py omarchy-menu-blackomarchy.jsonc; do
+  for f in blackomarchy-reappend-repo blackomarchy-omarchy-install blackomarchy-apply-login-branding blackomarchy-sddm-branding.service merge-omarchy-menu.py omarchy-menu-blackomarchy.jsonc; do
     if [[ -f $root/share/$f ]]; then
       install -m 0755 "$root/share/$f" "$dest_share/share/$f"
       install -m 0755 "$root/share/$f" "$dest_share/$f"
@@ -192,6 +201,13 @@ install_cli() {
       /usr/local/sbin/blackomarchy-apply-login-branding
     append_manifest_line "file	/usr/local/sbin/blackomarchy-apply-login-branding	helper"
   fi
+  if [[ -f $root/share/blackomarchy-sddm-branding.service ]]; then
+    install -m 0644 "$root/share/blackomarchy-sddm-branding.service" \
+      /etc/systemd/system/blackomarchy-sddm-branding.service
+    systemctl daemon-reload
+    systemctl enable --now blackomarchy-sddm-branding.service >/dev/null 2>&1 || true
+    append_manifest_line "file	/etc/systemd/system/blackomarchy-sddm-branding.service	unit"
+  fi
   printf '%s\n' "$BLACKOMARCHY_VERSION" >"$(state_dir)/version"
   append_manifest_line "file	${dest_bin}/blackomarchy	cli"
   append_manifest_line "file	${dest_share}	share"
@@ -208,6 +224,7 @@ remove_pre_refresh_hook() {
   owner=$(invoking_user)
   rm -f "$home/.config/omarchy/hooks/pre-refresh-pacman.d/blackomarchy-blackarch.sh" 2>/dev/null || true
   rm -f "$home/.config/omarchy/hooks/post-update.d/blackomarchy-post-update.sh" 2>/dev/null || true
+  rm -f "$home/.config/omarchy/hooks/post-boot.d/blackomarchy-post-boot.sh" 2>/dev/null || true
   merger=$(share_file merge-omarchy-menu.py)
   src=$(share_file omarchy-menu-blackomarchy.jsonc)
   target="$home/.config/omarchy/extensions/omarchy-menu.jsonc"

@@ -39,6 +39,9 @@ log "Omarchy $(omarchy_version_string | tr '\n' ' ')"
 ensure_blackarch_repo
 install_profile core
 install_cli
+# Package installs and our overlays rewrite user Omarchy/Hyprland
+# drop-ins. Recapture those lists before the hard compare.
+refresh_user_config_hashes
 
 if ! baseline_compare; then
   die "Omarchy baseline drifted after install; layer is present, run: sudo ./uninstall.sh"
