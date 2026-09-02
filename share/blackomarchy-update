@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# Refresh the Black omARCHy layer from git, then re-run bootstrap.
+# BlackArch *packages* already update via `omarchy update` (pacman -Syu).
+# This refreshes CLI, hooks, skills, and the login wordmark.
+set -euo pipefail
+
+URL="${BLACKOMARCHY_GIT_URL:-https://github.com/MahdiHedhli/BlackOmarchy.git}"
+
+git_user() {
+  if [[ -n ${SUDO_USER:-} && ${SUDO_USER} != root ]]; then
+    printf '%s\n' "$SUDO_USER"
+    return
+  fi
+  printf '%s\n' "${USER:-$(id -un)}"
+}
+
+git_home() {
+  local user
+  user=$(git_user)
+  if command -v getent >/dev/null 2>&1; then
+    getent passwd "$user" | cut -d: -f6
+    return
+  fi
+  printf '%s\n' "${HOME:-/home/$user}"
+}
+
+as_git_user() {
+  local user
+  user=$(git_user)
+  if [[ ${EUID:-$(id -u)} -eq 0 && -n $user && $user != root ]]; then
+    sudo -u "$user" "$@"
+  else
+    "$@"
+  fi
+}
+
+SRC="${BLACKOMARCHY_SRC:-$(git_home)/.local/share/blackomarchy-src}"
+
+if [[ -x $SRC/bootstrap.sh ]]; then
+  if [[ -d $SRC/.git ]]; then
+    if [[ -z $(as_git_user git -C "$SRC" status --porcelain 2>/dev/null || true) ]]; then
+      as_git_user git -C "$SRC" pull --ff-only
+    fi
+  fi
+else
+  as_git_user mkdir -p "$(dirname "$SRC")"
+  as_git_user git clone --depth 1 "$URL" "$SRC"
+fi
+
+[[ -x $SRC/bootstrap.sh ]] || {
+  printf 'blackomarchy-update: no bootstrap.sh in %s\n' "$SRC" >&2
+  exit 1
+}
+
+exec sudo "$SRC/bootstrap.sh"

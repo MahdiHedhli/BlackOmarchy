@@ -78,6 +78,7 @@ if [[ -f /etc/systemd/system/blackomarchy-sddm-branding.service ]]; then
 fi
 rm -rf /usr/local/share/blackomarchy
 rm -f /usr/local/bin/blackomarchy \
+  /usr/local/bin/blackomarchy-update \
   /usr/local/sbin/blackomarchy-reappend-repo \
   /usr/local/sbin/blackomarchy-apply-login-branding
 # Keep blackomarchy-omarchy-install and the seeded source tree so

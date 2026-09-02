@@ -42,11 +42,15 @@ seed_src_tree() {
   root=$(project_root_from_lib)
   [[ -n $home && $home != /root && -d $root ]] || return 0
   as_owner "$owner" mkdir -p "$dest"
+  local url="${BLACKOMARCHY_GIT_URL:-https://github.com/MahdiHedhli/BlackOmarchy.git}"
+  if [[ ! -d $dest/.git ]] && have_cmd git; then
+    as_owner "$owner" git clone --depth 1 "$url" "$dest" 2>/dev/null || true
+  fi
   if have_cmd rsync; then
     rsync -a --exclude private --exclude .git "$root/" "$dest/"
   else
     cp -a "$root"/. "$dest"/
-    rm -rf "$dest/private" "$dest/.git"
+    rm -rf "$dest/private"
   fi
   if [[ -n $owner && $owner != root ]]; then
     chown -R "$owner:$owner" "$dest" 2>/dev/null || true
@@ -166,7 +170,7 @@ install_cli() {
   if [[ -d $root/share/hooks ]]; then
     install -m 0755 "$root"/share/hooks/* "$dest_share/share/hooks/"
   fi
-  for f in blackomarchy-reappend-repo blackomarchy-omarchy-install blackomarchy-apply-login-branding blackomarchy-sddm-branding.service merge-omarchy-menu.py omarchy-menu-blackomarchy.jsonc; do
+  for f in blackomarchy-reappend-repo blackomarchy-omarchy-install blackomarchy-update blackomarchy-apply-login-branding blackomarchy-sddm-branding.service merge-omarchy-menu.py omarchy-menu-blackomarchy.jsonc; do
     if [[ -f $root/share/$f ]]; then
       install -m 0755 "$root/share/$f" "$dest_share/share/$f"
       install -m 0755 "$root/share/$f" "$dest_share/$f"
@@ -190,6 +194,11 @@ install_cli() {
     install -m 0755 "$root/share/blackomarchy-omarchy-install" \
       "$dest_bin/blackomarchy-omarchy-install"
     append_manifest_line "file	${dest_bin}/blackomarchy-omarchy-install	helper"
+  fi
+  if [[ -f $root/share/blackomarchy-update ]]; then
+    install -m 0755 "$root/share/blackomarchy-update" \
+      "$dest_bin/blackomarchy-update"
+    append_manifest_line "file	${dest_bin}/blackomarchy-update	helper"
   fi
   if [[ -f $root/share/blackomarchy-reappend-repo ]]; then
     install -m 0755 "$root/share/blackomarchy-reappend-repo" \

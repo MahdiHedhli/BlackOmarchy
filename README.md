@@ -119,48 +119,41 @@ on record. It will not generate exploit source. Details:
 
 ## Updating
 
-Keep using Omarchy's update command. There is no separate Black omARCHy
-updater.
+Keep using Omarchy's update command:
 
 ```bash
 omarchy update
 ```
 
-That path is `pacman -Syu` with Omarchy's snapshot and migrations.
-With `[blackarch]` still in `pacman.conf`, BlackArch packages update in
-the same transaction as the rest of the system. Do not replace this
-with a raw `pacman -Syu`.
+That is `pacman -Syu` plus migrations. With `[blackarch]` last in
+`pacman.conf`, BlackArch **packages** update in the same transaction.
+Do not replace this with a raw `pacman -Syu`.
 
-Omarchy can rewrite `pacman.conf` from a channel template
-(`omarchy refresh pacman`, some migrations). That is the step that
-would otherwise drop `[blackarch]`. Black omARCHy installs the
-documented user hooks so the stanza is restored automatically:
+After packages, Omarchy runs `post-update.d`. Our hook:
 
-- `~/.config/omarchy/hooks/pre-refresh-pacman.d/blackomarchy-blackarch.sh`
-  runs after the template is copied and before `pacman -Syyuu`
-- `~/.config/omarchy/hooks/post-update.d/blackomarchy-post-update.sh`
-  runs at the end of `omarchy update`: re-appends `[blackarch]` if
-  needed, re-applies the login overlay, and refreshes the Omarchy
-  baseline pin so `blackomarchy verify` does not treat a successful
-  Omarchy upgrade as layer drift
+1. Re-appends `[blackarch]` if a migration rewrote `pacman.conf`
+2. Runs `blackomarchy-update` (fast-forward the seeded git tree, then
+   `bootstrap.sh`) so CLI, hooks, skills, and the login wordmark match
+   this repo
+3. If the git pull cannot run, still restores the login overlay and
+   refreshes the baseline pin
 
-In both cases `[blackarch]` is appended last, so core/extra/omarchy
-keep package-name priority. The layer is not a fork and does not
-replace Omarchy's update binary.
+A failed layer pull does not fail the Omarchy update.
 
-`omarchy update` does **not** git-pull this repo. To pick up new
-skills, hooks, or the login wordmark, pull and re-run bootstrap:
+To refresh the layer without an Omarchy upgrade:
 
 ```bash
-cd BlackOmarchy   # or wherever you cloned it
-git pull --ff-only
-sudo ./bootstrap.sh
-sudo blackomarchy recapture-baseline
-blackomarchy verify
+blackomarchy update
 ```
 
-That is idempotent. If the greeter still shows stock OMARCHY after a
-reboot:
+That is the same as `blackomarchy-update`. First-time source is
+`~/.local/share/blackomarchy-src` (cloned from GitHub on install).
+
+`omarchy refresh pacman` still copies a channel template over
+`pacman.conf`. The `pre-refresh-pacman.d` hook puts `[blackarch]` back
+last before `-Syyuu`.
+
+If the greeter still shows stock OMARCHY after a reboot:
 
 ```bash
 sudo /usr/local/sbin/blackomarchy-apply-login-branding apply

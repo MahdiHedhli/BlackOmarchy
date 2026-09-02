@@ -51,6 +51,7 @@ Usage: blackomarchy <command>
   remove <profile>    Remove packages recorded for a profile
   doctor              Detection, pacman.conf, hooks, and guard checks
   recapture-baseline  Refresh the Omarchy pin after omarchy update
+  update              Pull the layer from git and re-run bootstrap
   help                Show this help
 EOF
 }
@@ -122,6 +123,16 @@ cmd_recapture_baseline() {
   capture_baseline
 }
 
+cmd_update() {
+  local updater
+  updater=$(command -v blackomarchy-update 2>/dev/null || true)
+  if [[ -z $updater && -x /usr/local/bin/blackomarchy-update ]]; then
+    updater=/usr/local/bin/blackomarchy-update
+  fi
+  [[ -n $updater ]] || die "blackomarchy-update is not installed"
+  exec "$updater"
+}
+
 cmd_doctor() {
   printf 'arch: %s\n' "$(uname -m)"
   printf 'os-release ID: %s\n' "$(read_os_id 2>/dev/null || printf missing)"
@@ -170,6 +181,12 @@ cmd_doctor() {
   else
     printf 'missing\n'
   fi
+  printf 'layer updater: '
+  if [[ -x /usr/local/bin/blackomarchy-update ]]; then
+    printf 'present\n'
+  else
+    printf 'missing\n'
+  fi
   printf 'agent skills: '
   if [[ -f $home/.agents/skills/black-omarchy/SKILL.md || -f $home/.grok/skills/black-omarchy/SKILL.md || -f $home/.claude/skills/black-omarchy/SKILL.md ]]; then
     printf 'present\n'
@@ -190,6 +207,7 @@ main() {
     remove) cmd_remove "$@" ;;
     doctor) cmd_doctor "$@" ;;
     recapture-baseline) cmd_recapture_baseline "$@" ;;
+    update) cmd_update "$@" ;;
     help|-h|--help) usage ;;
     *) usage >&2; exit 2 ;;
   esac

@@ -52,8 +52,10 @@ are recorded in `/var/lib/blackomarchy/exclusions`.
 ## Update path
 
 Keep using `omarchy update`. With `[blackarch]` last in `pacman.conf`,
-BlackArch packages update in that `pacman -Syu`. Do not run a raw
-`pacman -Syu` for the user. Do not set `OMARCHY_ALLOW_DIRECT_PACMAN`.
+BlackArch packages update in that `pacman -Syu`. The post-update hook
+then runs `blackomarchy-update` (git pull + bootstrap). To refresh the
+layer alone: `blackomarchy update`. Do not run a raw `pacman -Syu` for
+the user. Do not set `OMARCHY_ALLOW_DIRECT_PACMAN`.
 
 If a channel refresh dropped `[blackarch]`, the
 `pre-refresh-pacman.d` / `post-update.d` hooks re-append it last.
