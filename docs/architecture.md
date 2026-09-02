@@ -30,10 +30,13 @@ The layer owns:
 - `/usr/local/share/blackomarchy/`
 - `~/.config/omarchy/hooks/pre-refresh-pacman.d/blackomarchy-blackarch.sh`
 - `~/.config/omarchy/hooks/post-update.d/blackomarchy-post-update.sh`
+- `~/.config/omarchy/hooks/post-boot.d/blackomarchy-post-boot.sh`
 - Black omARCHy keys in `~/.config/omarchy/extensions/omarchy-menu.jsonc`
-- SDDM greeter `logo.png` overlay (Omarchy wordmark plus a BLACK caption
-  and the BlackArch katana through the A). `Main.qml` is not patched.
-  Uninstall restores the backed-up Omarchy logo.
+- SDDM greeter and Plymouth splash `logo.png` overlay (Omarchy wordmark
+  plus a BLACK caption and the BlackArch katana through the A).
+  `Main.qml` and Plymouth script colors are not patched. Plymouth is
+  baked into initramfs so reboot/unlock match logout. Uninstall
+  restores the backed-up Omarchy logos and rebuilds initramfs.
 - Agent Skills (`share/skills/`, mirrored to `.agents/skills/` and
   user-level Grok/Claude/Cursor/Codex/OpenCode/Gemini skill dirs).
 

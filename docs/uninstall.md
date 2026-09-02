@@ -15,7 +15,8 @@ This removes:
 - the `blackomarchy` CLI, reappend helper, and `/usr/local/share/blackomarchy`
 - the user-owned `pre-refresh-pacman.d` and `post-update.d` hooks
 - Security / profile rows from the menu overlay
-- the SDDM greeter logo overlay (Omarchy's original `logo.png` is restored)
+- the SDDM greeter and Plymouth splash logo overlays (Omarchy's original
+  `logo.png` files are restored and initramfs is rebuilt)
 - agent skills copied into `~/.agents/skills/` and the Grok / Claude /
   Cursor / Codex / OpenCode / Gemini skill directories
 

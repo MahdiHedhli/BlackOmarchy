@@ -92,11 +92,15 @@ Chrome, 1Password, and other optional apps. After the first bootstrap,
 add/remove is that menu path. Uninstall keeps the Install row so
 re-add is the same gesture.
 
-The SDDM login screen keeps Omarchy's greeter and colors. Bootstrap
-overlays `logo.png` only: a quiet BLACK caption above the pixel
-OMARCHY wordmark, with the BlackArch katana through the A. Uninstall
-restores Omarchy's logo. `omarchy update` re-applies the overlay if
-the packaged greeter overwrote it.
+The SDDM login screen and Plymouth reboot/unlock splash keep Omarchy's
+greeter, script, and colors. Bootstrap overlays `logo.png` only: a
+quiet BLACK caption above the pixel OMARCHY wordmark, with the
+BlackArch katana through the A. Plymouth is baked into initramfs once
+(`plymouth-set-default-theme` plus `limine-mkinitcpio` or
+`mkinitcpio -P`) so the mark survives reboot. Uninstall restores
+Omarchy's logos and rebuilds initramfs. `omarchy update` re-applies
+the overlay if a packaged refresh overwrote it. `Main.qml` is not
+patched.
 
 ## Agent skills
 
@@ -153,15 +157,19 @@ That is the same as `blackomarchy-update`. First-time source is
 `pacman.conf`. The `pre-refresh-pacman.d` hook puts `[blackarch]` back
 last before `-Syyuu`.
 
-If the greeter still shows stock OMARCHY after a reboot:
+Logout uses SDDM. Reboot and disk-unlock use Plymouth, which lives in
+initramfs — overlaying the greeter file alone does not survive reboot.
+
+If either screen still shows stock OMARCHY:
 
 ```bash
 sudo /usr/local/sbin/blackomarchy-apply-login-branding apply
 ```
 
-Then log out (or reboot). A oneshot before `sddm` re-applies the
-wordmark on boot so a packaged greeter refresh cannot keep the stock
-logo.
+That copies the wordmark onto SDDM and Plymouth, then rebuilds
+initramfs. A oneshot before `sddm` re-applies the greeter overlay on
+boot so a packaged refresh cannot keep the stock login logo. The
+Plymouth bake is skipped when the live splash already matches.
 
 ## Package profiles
 

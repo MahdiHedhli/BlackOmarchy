@@ -181,6 +181,18 @@ cmd_doctor() {
   else
     printf 'missing\n'
   fi
+  printf 'plymouth overlay: '
+  local ply=/usr/share/plymouth/themes/omarchy/logo.png
+  local mark=/usr/local/share/blackomarchy/share/branding/login-logo.png
+  if [[ -f $ply && -f $mark ]] && cmp -s "$ply" "$mark"; then
+    if [[ -f /var/lib/blackomarchy/plymouth-logo.baked ]]; then
+      printf 'baked\n'
+    else
+      printf 'filesystem (initramfs not baked; reboot splash may stay stock)\n'
+    fi
+  else
+    printf 'missing\n'
+  fi
   printf 'layer updater: '
   if [[ -x /usr/local/bin/blackomarchy-update ]]; then
     printf 'present\n'

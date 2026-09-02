@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# Overlay the SDDM greeter wordmark only. Leaves Main.qml and Omarchy
-# colors alone. Inverse of this helper is a restore of the backed-up logo.
+# Overlay the SDDM greeter and Plymouth splash wordmark only. Leaves
+# Main.qml, omarchy.script colors, and other theme assets alone.
+# Inverse is a restore of the backed-up logos plus an initramfs rebuild
+# so the reboot/unlock splash matches.
 set -euo pipefail
 
-if [[ ${EUID:-$(id -u)} -ne 0 ]]; then
+if [[ ${EUID:-$(id -u)} -ne 0 && -z ${BLACKOMARCHY_SKIP_SUDO:-} ]]; then
   exec sudo "$0" "$@"
 fi
 
@@ -13,32 +15,119 @@ LOGO="$SHARE/share/branding/login-logo.png"
 if [[ ! -f $LOGO ]]; then
   LOGO="$SHARE/branding/login-logo.png"
 fi
-DEST=/usr/share/sddm/themes/omarchy/logo.png
-BACKUP="$STATE/sddm-logo.omarchy.png"
-STOCK=/usr/share/omarchy/default/sddm/omarchy/logo.png
+
+SDDM_DEST=${BLACKOMARCHY_SDDM_LOGO:-/usr/share/sddm/themes/omarchy/logo.png}
+SDDM_BACKUP="$STATE/sddm-logo.omarchy.png"
+SDDM_STOCK=/usr/share/omarchy/default/sddm/omarchy/logo.png
+
+PLYMOUTH_DEST=${BLACKOMARCHY_PLYMOUTH_LOGO:-/usr/share/plymouth/themes/omarchy/logo.png}
+PLYMOUTH_BACKUP="$STATE/plymouth-logo.omarchy.png"
+PLYMOUTH_STOCK=/usr/share/omarchy/default/plymouth/logo.png
+PLYMOUTH_STAMP="$STATE/plymouth-logo.baked"
+
+layer_present() {
+  [[ -f $STATE/version ]]
+}
+
+overlay_logo() {
+  local dest=$1 backup=$2
+  [[ -f $LOGO && -f $dest ]] || return 1
+  mkdir -p "$STATE"
+  if [[ ! -f $backup ]]; then
+    cp -a "$dest" "$backup"
+  fi
+  if cmp -s "$LOGO" "$dest"; then
+    return 1
+  fi
+  install -m 0644 "$LOGO" "$dest"
+  return 0
+}
+
+restore_logo() {
+  local dest=$1 backup=$2 stock=$3
+  [[ -f $dest ]] || return 1
+  local src=
+  if [[ -f $backup ]]; then
+    src=$backup
+  elif [[ -f $stock ]]; then
+    src=$stock
+  else
+    return 1
+  fi
+  if cmp -s "$src" "$dest"; then
+    return 1
+  fi
+  cp -a "$src" "$dest"
+  return 0
+}
+
+logo_digest() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$1" | awk '{print $1}'
+  else
+    shasum -a 256 "$1" | awk '{print $1}'
+  fi
+}
+
+# Same post-publish steps Omarchy's plymouth-set uses after copying
+# assets: pin the theme, then rebuild initramfs so the splash survives
+# reboot. Skip when the baked digest already matches the live file.
+rebuild_plymouth_initramfs() {
+  [[ -f $PLYMOUTH_DEST ]] || return 0
+  if [[ -n ${BLACKOMARCHY_SKIP_INITRAMFS:-} ]]; then
+    return 0
+  fi
+  local digest
+  digest=$(logo_digest "$PLYMOUTH_DEST")
+  if [[ -f $PLYMOUTH_STAMP && $(cat "$PLYMOUTH_STAMP") == "$digest" ]]; then
+    return 0
+  fi
+  if command -v plymouth-set-default-theme >/dev/null 2>&1; then
+    plymouth-set-default-theme omarchy >/dev/null 2>&1 || true
+  fi
+  if command -v limine-mkinitcpio >/dev/null 2>&1; then
+    limine-mkinitcpio
+  elif command -v mkinitcpio >/dev/null 2>&1; then
+    mkinitcpio -P
+  else
+    printf 'blackomarchy: no limine-mkinitcpio or mkinitcpio; reboot splash not baked into initramfs\n' >&2
+    return 1
+  fi
+  printf '%s\n' "$digest" >"$PLYMOUTH_STAMP"
+}
+
+apply_sddm() {
+  overlay_logo "$SDDM_DEST" "$SDDM_BACKUP" || true
+}
+
+apply_plymouth() {
+  overlay_logo "$PLYMOUTH_DEST" "$PLYMOUTH_BACKUP" || true
+  rebuild_plymouth_initramfs
+}
 
 mode=${1:-apply}
 
 case $mode in
   apply)
-    [[ -f /var/lib/blackomarchy/version ]] || exit 0
-    [[ -f $LOGO && -f $DEST ]] || exit 0
-    mkdir -p "$STATE"
-    if [[ ! -f $BACKUP ]]; then
-      cp -a "$DEST" "$BACKUP"
-    fi
-    install -m 0644 "$LOGO" "$DEST"
+    layer_present || exit 0
+    apply_sddm
+    apply_plymouth
+    ;;
+  apply-sddm)
+    layer_present || exit 0
+    apply_sddm
     ;;
   restore)
-    [[ -f $DEST ]] || exit 0
-    if [[ -f $BACKUP ]]; then
-      cp -a "$BACKUP" "$DEST"
-    elif [[ -f $STOCK ]]; then
-      cp -a "$STOCK" "$DEST"
+    restore_logo "$SDDM_DEST" "$SDDM_BACKUP" "$SDDM_STOCK" || true
+    if restore_logo "$PLYMOUTH_DEST" "$PLYMOUTH_BACKUP" "$PLYMOUTH_STOCK"; then
+      rm -f "$PLYMOUTH_STAMP"
+      rebuild_plymouth_initramfs || true
+    else
+      rm -f "$PLYMOUTH_STAMP"
     fi
     ;;
   *)
-    printf 'usage: blackomarchy-apply-login-branding [apply|restore]\n' >&2
+    printf 'usage: blackomarchy-apply-login-branding [apply|apply-sddm|restore]\n' >&2
     exit 2
     ;;
 esac
