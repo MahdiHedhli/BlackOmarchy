@@ -17,6 +17,8 @@ This removes:
 - Security / profile rows from the menu overlay
 - the SDDM greeter and Plymouth splash logo overlays (Omarchy's original
   `logo.png` files are restored and initramfs is rebuilt)
+- the systemd path watch, repair oneshot, and pacman hook that re-apply
+  the wordmark after a packaged greeter refresh
 - agent skills copied into `~/.agents/skills/` and the Grok / Claude /
   Cursor / Codex / OpenCode / Gemini skill directories
 

@@ -68,17 +68,20 @@ else
   remove_blackarch_stanza_from_file
 fi
 
-if [[ -x /usr/local/sbin/blackomarchy-apply-login-branding ]]; then
-  /usr/local/sbin/blackomarchy-apply-login-branding restore || true
-fi
+# Stop the path watch before restoring logos. Otherwise PathChanged
+# fires repair.service and apply puts the wordmark back.
 if command -v systemctl >/dev/null 2>&1; then
+  systemctl stop blackomarchy-sddm-branding-repair.service >/dev/null 2>&1 || true
   systemctl disable --now blackomarchy-sddm-branding.path >/dev/null 2>&1 || true
   systemctl disable --now blackomarchy-sddm-branding.service >/dev/null 2>&1 || true
 fi
+rm -f /etc/pacman.d/hooks/99-blackomarchy-login-branding.hook
+if [[ -x /usr/local/sbin/blackomarchy-apply-login-branding ]]; then
+  /usr/local/sbin/blackomarchy-apply-login-branding restore || true
+fi
 rm -f /etc/systemd/system/blackomarchy-sddm-branding.service \
   /etc/systemd/system/blackomarchy-sddm-branding-repair.service \
-  /etc/systemd/system/blackomarchy-sddm-branding.path \
-  /etc/pacman.d/hooks/99-blackomarchy-login-branding.hook
+  /etc/systemd/system/blackomarchy-sddm-branding.path
 if command -v systemctl >/dev/null 2>&1; then
   systemctl daemon-reload || true
 fi

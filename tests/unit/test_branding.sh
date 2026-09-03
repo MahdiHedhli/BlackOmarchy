@@ -77,4 +77,13 @@ bash "$HELPER" sync-limine
 grep -q "omarchy_linux.efi#${hash}" "$tmp/limine.conf" || exit 1
 grep -q "limine_history/omarchy_linux.efi_sha256_dead#${stale_b}" "$tmp/limine.conf" || exit 1
 
+[[ -f $HERE/share/blackomarchy-sddm-branding.path ]] || exit 1
+[[ -f $HERE/share/blackomarchy-sddm-branding-repair.service ]] || exit 1
+[[ -f $HERE/share/blackomarchy-login-branding.hook ]] || exit 1
+grep -q 'PathChanged=/usr/share/sddm/themes/omarchy/logo.png' "$HERE/share/blackomarchy-sddm-branding.path" || exit 1
+grep -q 'PathChanged=/usr/share/plymouth/themes/omarchy/logo.png' "$HERE/share/blackomarchy-sddm-branding.path" || exit 1
+grep -q 'Unit=blackomarchy-sddm-branding-repair.service' "$HERE/share/blackomarchy-sddm-branding.path" || exit 1
+grep -q 'When = PostTransaction' "$HERE/share/blackomarchy-login-branding.hook" || exit 1
+grep -q 'Exec = /usr/local/sbin/blackomarchy-apply-login-branding apply' "$HERE/share/blackomarchy-login-branding.hook" || exit 1
+
 echo "ok branding overlay"
