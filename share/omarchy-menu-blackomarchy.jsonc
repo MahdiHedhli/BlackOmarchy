@@ -19,45 +19,101 @@
     "description": "Curated Black omARCHy profiles",
     "when": "test -f /var/lib/blackomarchy/version"
   },
+  "install.security.all": {
+    "icon": "󰯂",
+    "label": "All",
+    "title": "All tools",
+    "description": "BlackArch catalog",
+    "when": "test -f /var/lib/blackomarchy/version"
+  },
+  "install.security.all.all": {
+    "icon": "󰯂",
+    "label": "All",
+    "description": "Install every listed BlackArch package that does not conflict with Omarchy (not the blackarch metapackage)",
+    "when": "test -f /var/lib/blackomarchy/version",
+    "action": "omarchy-launch-floating-terminal-with-presentation 'sudo blackomarchy install catalog'"
+  },
   "install.security.web": {
     "icon": "󰖟",
     "label": "Web",
+    "when": "test -f /var/lib/blackomarchy/version"
+  },
+  "install.security.web.all": {
+    "icon": "󰖟",
+    "label": "All",
+    "description": "Install the curated web profile",
     "when": "test -f /var/lib/blackomarchy/version",
     "action": "omarchy-launch-floating-terminal-with-presentation 'sudo blackomarchy install web'"
   },
   "install.security.recon": {
     "icon": "󰭎",
     "label": "Recon",
+    "when": "test -f /var/lib/blackomarchy/version"
+  },
+  "install.security.recon.all": {
+    "icon": "󰭎",
+    "label": "All",
+    "description": "Install the curated recon profile",
     "when": "test -f /var/lib/blackomarchy/version",
     "action": "omarchy-launch-floating-terminal-with-presentation 'sudo blackomarchy install recon'"
   },
   "install.security.network": {
     "icon": "󰛳",
     "label": "Network",
+    "when": "test -f /var/lib/blackomarchy/version"
+  },
+  "install.security.network.all": {
+    "icon": "󰛳",
+    "label": "All",
+    "description": "Install the curated network profile",
     "when": "test -f /var/lib/blackomarchy/version",
     "action": "omarchy-launch-floating-terminal-with-presentation 'sudo blackomarchy install network'"
   },
   "install.security.wireless": {
     "icon": "󰖩",
     "label": "Wireless",
+    "when": "test -f /var/lib/blackomarchy/version"
+  },
+  "install.security.wireless.all": {
+    "icon": "󰖩",
+    "label": "All",
+    "description": "Install the curated wireless profile",
     "when": "test -f /var/lib/blackomarchy/version",
     "action": "omarchy-launch-floating-terminal-with-presentation 'sudo blackomarchy install wireless'"
   },
   "install.security.reversing": {
     "icon": "󰣪",
     "label": "Reversing",
+    "when": "test -f /var/lib/blackomarchy/version"
+  },
+  "install.security.reversing.all": {
+    "icon": "󰣪",
+    "label": "All",
+    "description": "Install the curated reversing profile",
     "when": "test -f /var/lib/blackomarchy/version",
     "action": "omarchy-launch-floating-terminal-with-presentation 'sudo blackomarchy install reversing'"
   },
   "install.security.forensics": {
     "icon": "󰷐",
     "label": "Forensics",
+    "when": "test -f /var/lib/blackomarchy/version"
+  },
+  "install.security.forensics.all": {
+    "icon": "󰷐",
+    "label": "All",
+    "description": "Install the curated forensics profile",
     "when": "test -f /var/lib/blackomarchy/version",
     "action": "omarchy-launch-floating-terminal-with-presentation 'sudo blackomarchy install forensics'"
   },
   "install.security.password": {
     "icon": "󰌆",
     "label": "Password",
+    "when": "test -f /var/lib/blackomarchy/version"
+  },
+  "install.security.password.all": {
+    "icon": "󰌆",
+    "label": "All",
+    "description": "Install the curated password profile",
     "when": "test -f /var/lib/blackomarchy/version",
     "action": "omarchy-launch-floating-terminal-with-presentation 'sudo blackomarchy install password'"
   },

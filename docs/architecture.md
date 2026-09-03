@@ -60,7 +60,9 @@ migration rewrote the file.
 
 Add and remove use the same menu overlay Chrome and 1Password use:
 Install > Black omARCHy (`disabled` while present) and Remove >
-Black omARCHy (`when` present).
+Black omARCHy (`when` present). Install > Security tools > **All** lists the live BlackArch group
+(top row **All** runs `blackomarchy install catalog`, never
+`pacman -S blackarch`). Extra profiles fan out from `packages/*.txt`.
 
 Package installs never pass `--sysupgrade` or `--overwrite='*'`. A
 transaction that would upgrade an already-installed package is skipped.
