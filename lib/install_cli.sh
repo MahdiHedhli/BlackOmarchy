@@ -96,17 +96,25 @@ install_omarchy_integration() {
   fi
 
   src=$(share_file omarchy-menu-blackomarchy.jsonc)
-  local merger target
+  local merger target packages_dir catalog
   merger=$(share_file merge-omarchy-menu.py)
   target="$home/.config/omarchy/extensions/omarchy-menu.jsonc"
+  packages_dir=$(project_root_from_lib)/packages
+  catalog=$(mktemp)
+  chmod 0644 "$catalog"
+  list_blackarch_catalog >"$catalog" || true
+  if [[ -n $owner && $owner != root ]]; then
+    chown "$owner:$owner" "$catalog" 2>/dev/null || true
+  fi
   if [[ -f $src && -f $merger ]] && have_cmd python3; then
-    as_owner "$owner" python3 "$merger" "$src" "$target" install
+    as_owner "$owner" python3 "$merger" "$src" "$target" install "$packages_dir" "$catalog"
     [[ -n $owner ]] && chown "$owner:$owner" "$target" 2>/dev/null || true
     append_manifest_line "file	${target}	menu"
     if have_cmd omarchy; then
       as_owner "$owner" omarchy menu refresh >/dev/null 2>&1 || true
     fi
   fi
+  rm -f "$catalog"
 
   install_agent_skills
 }

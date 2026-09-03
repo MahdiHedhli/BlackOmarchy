@@ -40,10 +40,12 @@ sudo ./bootstrap.sh
 | `sudo blackomarchy recapture-baseline` | Refresh the Omarchy pin after install or `omarchy update` |
 | `blackomarchy doctor` | Hooks, helper, login and Plymouth overlay |
 | `blackomarchy profiles` | Curated profile names |
-| `sudo blackomarchy install <profile>` | `core`, `web`, `recon`, `network`, `wireless`, `reversing`, `forensics`, `password`, or `all` |
-| `sudo blackomarchy remove <profile>` | Remove packages recorded for that profile |
+| `sudo blackomarchy install <profile> [package]` | `core`, `web`, `recon`, `network`, `wireless`, `reversing`, `forensics`, `password`, `all`, or `catalog` |
+| `sudo blackomarchy remove <profile> [package]` | Remove packages recorded for that profile |
 
 `all` means every curated profile, not `pacman -S blackarch`.
+`catalog` is the BlackArch group, one package at a time, skipping
+conflicts. Do not install the `blackarch` metapackage.
 
 Package lists live in `packages/*.txt` (installed copy:
 `/usr/local/share/blackomarchy/packages/`). Conflicts are skipped; they
@@ -70,7 +72,7 @@ those hooks should have run and the stanza is missing.
   bakes Plymouth into initramfs. Do not call `omarchy plymouth set`
   (it rewrites Main.qml).
 - Do not `apt`. This is Arch/Omarchy. Extra packages:
-  `omarchy-pkg-add <name>` or `sudo blackomarchy install <profile>`.
+  `omarchy-pkg-add <name>` or `sudo blackomarchy install <profile> [package]`.
 - Same-name packages resolve from `core` / `extra` / `omarchy` first
   because `[blackarch]` is last. That is intentional.
 - Do not install `blackarch` or `blackarch-officials` metapackages.

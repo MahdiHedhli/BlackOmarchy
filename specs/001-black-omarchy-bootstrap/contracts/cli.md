@@ -7,17 +7,21 @@ stdout; errors on stderr. No JSON required in v0.1.
 blackomarchy status
 blackomarchy verify
 blackomarchy profiles
-blackomarchy install <profile>
-blackomarchy remove <profile>
+blackomarchy install <profile> [package]
+blackomarchy remove <profile> [package]
 blackomarchy doctor
 blackomarchy help
 ```
 
 `profile` is one of: `core`, `web`, `recon`, `network`, `wireless`,
-`reversing`, `forensics`, `password`, `all`.
+`reversing`, `forensics`, `password`, `all`, `catalog`.
 
 `all` expands to the curated profiles above, never the BlackArch
-`blackarch` group.
+`blackarch` group. `catalog` walks `pacman -Sg blackarch` one package
+at a time and skips conflicts; it never installs the `blackarch`
+metapackage. An optional `package` must already appear in that
+profile's `packages/*.txt` list (or in the BlackArch group when the
+profile is `catalog`).
 
 `install` and `remove` require root. `status`, `verify`, `profiles`,
 `doctor` should run without root where possible; `verify` may report

@@ -47,8 +47,8 @@ Usage: blackomarchy <command>
   status              Show repository, profile, and Omarchy version
   verify              Compare Omarchy baseline and repo sanity
   profiles            List curated profiles
-  install <profile>   Install a curated profile (or "all")
-  remove <profile>    Remove packages recorded for a profile
+  install <profile> [package]  Curated profile, catalog, or one package from it
+  remove <profile> [package]   Remove a profile, catalog, or one recorded package
   doctor              Detection, pacman.conf, hooks, and guard checks
   recapture-baseline  Refresh the Omarchy pin after omarchy update
   update              Pull the layer from git and re-run bootstrap
@@ -101,21 +101,37 @@ cmd_profiles() {
 
 cmd_install() {
   local profile=${1:-}
-  [[ -n $profile ]] || die "usage: blackomarchy install <profile>"
+  local pkg=${2:-}
+  [[ -n $profile ]] || die "usage: blackomarchy install <profile> [package]"
   require_root
   unset OMARCHY_ALLOW_DIRECT_PACMAN OMARCHY_UPDATE_PACMAN
   detect_host
   ensure_state_dir
   create_backup >/dev/null
   ensure_blackarch_repo
-  install_profile "$profile"
+  if [[ $profile == catalog ]]; then
+    if [[ -n $pkg ]]; then
+      install_catalog_package "$pkg"
+    else
+      install_catalog
+    fi
+  elif [[ -n $pkg ]]; then
+    install_profile_package "$profile" "$pkg"
+  else
+    install_profile "$profile"
+  fi
 }
 
 cmd_remove() {
   local profile=${1:-}
-  [[ -n $profile ]] || die "usage: blackomarchy remove <profile>"
+  local pkg=${2:-}
+  [[ -n $profile ]] || die "usage: blackomarchy remove <profile> [package]"
   require_root
-  remove_profile "$profile"
+  if [[ -n $pkg ]]; then
+    remove_profile_package "$profile" "$pkg"
+  else
+    remove_profile "$profile"
+  fi
 }
 
 cmd_recapture_baseline() {

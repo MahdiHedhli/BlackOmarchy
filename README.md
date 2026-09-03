@@ -84,7 +84,8 @@ are patched):
 
 - Install > Black omARCHy
 - Remove > Black omARCHy
-- Install > Security tools (extra profiles)
+- Install > Security tools (All lists the BlackArch catalog; extra
+  profiles still fan out from the curated lists)
 - Security (status, verify, and a few installed tools)
 
 Install and Remove use the same floating terminal Omarchy uses for
