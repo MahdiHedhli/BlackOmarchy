@@ -71,9 +71,15 @@ fi
 if [[ -x /usr/local/sbin/blackomarchy-apply-login-branding ]]; then
   /usr/local/sbin/blackomarchy-apply-login-branding restore || true
 fi
-if [[ -f /etc/systemd/system/blackomarchy-sddm-branding.service ]]; then
+if command -v systemctl >/dev/null 2>&1; then
+  systemctl disable --now blackomarchy-sddm-branding.path >/dev/null 2>&1 || true
   systemctl disable --now blackomarchy-sddm-branding.service >/dev/null 2>&1 || true
-  rm -f /etc/systemd/system/blackomarchy-sddm-branding.service
+fi
+rm -f /etc/systemd/system/blackomarchy-sddm-branding.service \
+  /etc/systemd/system/blackomarchy-sddm-branding-repair.service \
+  /etc/systemd/system/blackomarchy-sddm-branding.path \
+  /etc/pacman.d/hooks/99-blackomarchy-login-branding.hook
+if command -v systemctl >/dev/null 2>&1; then
   systemctl daemon-reload || true
 fi
 rm -rf /usr/local/share/blackomarchy

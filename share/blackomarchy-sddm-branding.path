@@ -1,0 +1,12 @@
+[Unit]
+Description=Watch Omarchy greeter and Plymouth logos for Black omARCHy overlay
+Documentation=https://github.com/MahdiHedhli/BlackOmarchy
+ConditionPathExists=/var/lib/blackomarchy/version
+
+[Path]
+PathChanged=/usr/share/sddm/themes/omarchy/logo.png
+PathChanged=/usr/share/plymouth/themes/omarchy/logo.png
+Unit=blackomarchy-sddm-branding-repair.service
+
+[Install]
+WantedBy=multi-user.target

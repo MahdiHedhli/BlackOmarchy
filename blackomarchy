@@ -193,6 +193,18 @@ cmd_doctor() {
   else
     printf 'missing\n'
   fi
+  printf 'branding unit: '
+  if command -v systemctl >/dev/null 2>&1 && systemctl is-enabled blackomarchy-sddm-branding.service >/dev/null 2>&1; then
+    printf 'enabled\n'
+  else
+    printf 'disabled\n'
+  fi
+  printf 'branding watch: '
+  if command -v systemctl >/dev/null 2>&1 && systemctl is-enabled blackomarchy-sddm-branding.path >/dev/null 2>&1; then
+    printf 'enabled\n'
+  else
+    printf 'disabled\n'
+  fi
   printf 'layer updater: '
   if [[ -x /usr/local/bin/blackomarchy-update ]]; then
     printf 'present\n'

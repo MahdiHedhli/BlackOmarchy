@@ -170,7 +170,7 @@ install_cli() {
   if [[ -d $root/share/hooks ]]; then
     install -m 0755 "$root"/share/hooks/* "$dest_share/share/hooks/"
   fi
-  for f in blackomarchy-reappend-repo blackomarchy-omarchy-install blackomarchy-update blackomarchy-apply-login-branding blackomarchy-sddm-branding.service merge-omarchy-menu.py omarchy-menu-blackomarchy.jsonc; do
+  for f in blackomarchy-reappend-repo blackomarchy-omarchy-install blackomarchy-update blackomarchy-apply-login-branding blackomarchy-sddm-branding.service blackomarchy-sddm-branding-repair.service blackomarchy-sddm-branding.path blackomarchy-login-branding.hook merge-omarchy-menu.py omarchy-menu-blackomarchy.jsonc; do
     if [[ -f $root/share/$f ]]; then
       install -m 0755 "$root/share/$f" "$dest_share/share/$f"
       install -m 0755 "$root/share/$f" "$dest_share/$f"
@@ -216,9 +216,29 @@ install_cli() {
   if [[ -f $root/share/blackomarchy-sddm-branding.service ]]; then
     install -m 0644 "$root/share/blackomarchy-sddm-branding.service" \
       /etc/systemd/system/blackomarchy-sddm-branding.service
-    systemctl daemon-reload
-    systemctl enable --now blackomarchy-sddm-branding.service >/dev/null 2>&1 || true
     append_manifest_line "file	/etc/systemd/system/blackomarchy-sddm-branding.service	unit"
+  fi
+  if [[ -f $root/share/blackomarchy-sddm-branding-repair.service ]]; then
+    install -m 0644 "$root/share/blackomarchy-sddm-branding-repair.service" \
+      /etc/systemd/system/blackomarchy-sddm-branding-repair.service
+    append_manifest_line "file	/etc/systemd/system/blackomarchy-sddm-branding-repair.service	unit"
+  fi
+  if [[ -f $root/share/blackomarchy-sddm-branding.path ]]; then
+    install -m 0644 "$root/share/blackomarchy-sddm-branding.path" \
+      /etc/systemd/system/blackomarchy-sddm-branding.path
+    append_manifest_line "file	/etc/systemd/system/blackomarchy-sddm-branding.path	unit"
+  fi
+  if [[ -f $root/share/blackomarchy-login-branding.hook ]]; then
+    install -d -m 0755 /etc/pacman.d/hooks
+    install -m 0644 "$root/share/blackomarchy-login-branding.hook" \
+      /etc/pacman.d/hooks/99-blackomarchy-login-branding.hook
+    append_manifest_line "file	/etc/pacman.d/hooks/99-blackomarchy-login-branding.hook	hook"
+  fi
+  if have_cmd systemctl; then
+    systemctl daemon-reload >/dev/null 2>&1 || true
+    systemctl enable --now blackomarchy-sddm-branding.service \
+      blackomarchy-sddm-branding.path >/dev/null 2>&1 ||
+      log "could not enable login branding systemd units"
   fi
   install_omarchy_integration
   if [[ -x /usr/local/sbin/blackomarchy-apply-login-branding ]]; then

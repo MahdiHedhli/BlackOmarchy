@@ -1,0 +1,9 @@
+[Unit]
+Description=Re-apply Black omARCHy wordmark after a packaged restore
+Documentation=https://github.com/MahdiHedhli/BlackOmarchy
+ConditionPathExists=/var/lib/blackomarchy/version
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/blackomarchy-apply-login-branding apply
