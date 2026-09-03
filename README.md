@@ -98,9 +98,9 @@ quiet BLACK caption above the pixel OMARCHY wordmark, with the
 BlackArch katana through the A. Plymouth is baked into initramfs once
 (`plymouth-set-default-theme` plus `limine-mkinitcpio` or
 `mkinitcpio -P`) so the mark survives reboot. Uninstall restores
-Omarchy's logos and rebuilds initramfs. `omarchy update` re-applies
-the overlay if a packaged refresh overwrote it. `Main.qml` is not
-patched.
+Omarchy's logos and rebuilds initramfs. `omarchy update`,
+`omarchy refresh sddm`, and Style > Unlock re-apply the overlay if a
+packaged refresh overwrote it. `Main.qml` is not patched.
 
 ## Agent skills
 
@@ -164,13 +164,15 @@ If either screen still shows stock OMARCHY:
 
 ```bash
 sudo /usr/local/sbin/blackomarchy-apply-login-branding apply
+blackomarchy doctor
 ```
 
 That copies the wordmark onto SDDM and Plymouth, then rebuilds
 initramfs and refreshes the live UKI Blake2b hash in `limine.conf`.
-A oneshot before `sddm` re-applies the greeter overlay on boot so a
-packaged refresh cannot keep the stock login logo. The Plymouth bake
-is skipped when the live splash already matches.
+A oneshot before `sddm`, a path watch on both `logo.png` files, and a
+pacman hook re-apply the overlay when a packaged refresh restores
+stock. The Plymouth bake is skipped when the live splash already
+matches.
 
 If reboot stops on `Blake2b hash for URI ... does not match`, press
 `Y` once to continue, then:

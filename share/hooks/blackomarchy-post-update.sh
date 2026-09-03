@@ -1,7 +1,7 @@
 #!/bin/bash
 # Called by `omarchy update` via omarchy-hook post-update.
 # Re-append [blackarch] if a migration rewrote pacman.conf, refresh the
-# Black omARCHy layer from git, then restore the login wordmark.
+# Black omARCHy layer from git, then restore the login/Plymouth wordmark.
 # A failed layer pull must not fail the Omarchy update.
 
 [[ -f /var/lib/blackomarchy/version ]] || exit 0

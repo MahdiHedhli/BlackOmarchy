@@ -1,0 +1,11 @@
+[Trigger]
+Type = Path
+Operation = Install
+Operation = Upgrade
+Target = usr/share/sddm/themes/omarchy/*
+Target = usr/share/plymouth/themes/omarchy/*
+
+[Action]
+Description = Re-applying Black omARCHy login wordmark
+When = PostTransaction
+Exec = /usr/local/sbin/blackomarchy-apply-login-branding apply
