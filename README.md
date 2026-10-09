@@ -26,7 +26,7 @@ v0.1 is experimental. Treat it that way.
 - Updated keyring integrity checks to compare installed files against the independently verified package.
 - Validated shell syntax, installed-layer status, repository configuration, and patch formatting.
 
-'See the implementation in lib/blackarch.sh.'
+See the implementation in `lib/blackarch.sh.`
 
 ## What this is not
 
@@ -243,7 +243,7 @@ Details: [docs/uninstall.md](docs/uninstall.md).
 
 ## Security model
 
-- 'strap.sh' is hash-checked against the value published on the official BlackArch downloads page.
+- strap.sh` is hash-checked against the value published on the official BlackArch downloads page.
 - The blackarch-keyring package is downloaded from the official repository and its detached GPG signature is verified against an explicit allowlist of trusted signer fingerprints.
 - Installed BlackArch keyring files are checked against the independently verified package.
 - Bootstrap never sets OMARCHY_ALLOW_DIRECT_PACMAN.
