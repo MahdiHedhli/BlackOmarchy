@@ -16,6 +16,18 @@ the official BlackArch repository and a curated tool set.
 
 v0.1 is experimental. Treat it that way.
 
+## Technical Contributions
+
+### BlackArch Bootstrap Compatibility
+
+- Investigated an upstream compatibility issue in the BlackArch bootstrap process and implemented an updated keyring verification workflow.
+- Adapted keyring package discovery to the current BlackArch repository structure.
+- Added GPG signature verification against an explicit allowlist of trusted signer fingerprints.
+- Updated keyring integrity checks to compare installed files against the independently verified package.
+- Validated shell syntax, installed-layer status, repository configuration, and patch formatting.
+
+'See the implementation in lib/blackarch.sh.'
+
 ## What this is not
 
 - Not affiliated with, endorsed by, or part of Omarchy, BlackArch, or
@@ -63,17 +75,12 @@ The script:
 1. Checks architecture and Omarchy evidence
 2. Backs up pacman configuration
 3. Records an Omarchy baseline
-4. Downloads official `strap.sh` and checks it against the SHA1
-   currently published on the BlackArch downloads page
-5. Verifies the BlackArch keyring tarball with the fingerprint named in
-   that script
-6. Runs the verified strap script if the BlackArch repo is not already
-   enabled
-7. Installs the `core` profile one package at a time, skipping anything
-   that would upgrade or replace already-installed software
-8. Installs the `blackomarchy` CLI, Omarchy menu overlay, login
-   wordmark, update hooks, and Agent Skills
-9. Compares the Omarchy baseline and exits non-zero on unexpected drift
+4. Downloads the official strap.sh and checks its SHA1 against the value published on the BlackArch downloads page.
+5. Discovers the blackarch-keyring package through the official repository database and verifies its detached GPG signature against an explicit allowlist of trusted signer fingerprints.
+6. Runs the verified strap script if the BlackArch repository is not already enabled.
+7. Installs the core profile one package at a time, skipping anything that would upgrade or replace already-installed software.
+8. Installs the blackomarchy CLI, Omarchy menu overlay, login wordmark, update hooks, and Agent Skills.
+9. Compares the Omarchy baseline and exits non-zero on unexpected drift.
 
 Re-running bootstrap is safe. It will not duplicate `[blackarch]` or
 re-run `strap.sh` when the repo is already enabled. Re-run it after
@@ -236,16 +243,13 @@ Details: [docs/uninstall.md](docs/uninstall.md).
 
 ## Security model
 
-- No `curl | sh`.
-- `strap.sh` is hash-checked against the live official downloads page.
-- The keyring tarball is signature-checked before `strap.sh` is allowed
-  to install it.
-- Bootstrap never sets `OMARCHY_ALLOW_DIRECT_PACMAN`.
+- 'strap.sh' is hash-checked against the value published on the official BlackArch downloads page.
+- The blackarch-keyring package is downloaded from the official repository and its detached GPG signature is verified against an explicit allowlist of trusted signer fingerprints.
+- Installed BlackArch keyring files are checked against the independently verified package.
+- Bootstrap never sets OMARCHY_ALLOW_DIRECT_PACMAN.
 - Conflicts are skipped, not overwritten.
-- Local operator files live in `private/` and are gitignored.
-
-The downloads-page SHA1 is same-origin with `strap.sh`. It catches
-corruption and split-brain, not a compromise of blackarch.org itself.
+- Local operator files live in private/ and are gitignored.
+- The downloads-page SHA1 is same-origin with `strap.sh`. It catches corruption and split-brain, not a compromise of blackarch.org itself.
 
 ## Known limitations
 
