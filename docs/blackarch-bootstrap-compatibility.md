@@ -151,6 +151,10 @@ verify_keyring_package() {
     fi
   done
 ```
+Keys are requested from two public keyservers:
+
+- `keyserver.ubuntu.com`: primary.
+- `keys.openpgp.org`: fallback, only used if the request to the primary fails.
 
 Keys are requested by their **full 40-character fingerprint**, so a keyserver cannot substitute a different key: GPG will only import a key matching the requested fingerprint.
 
