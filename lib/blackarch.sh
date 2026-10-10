@@ -14,18 +14,6 @@ parse_strap_sha1_from_page() {
   printf '%s\n' "$hash"
 }
 
-parse_sig_issuer_fingerprint() {
-  local sig=$1 fpr
-  fpr=$(gpg --batch --list-packets "$sig" 2>/dev/null \
-    | awk '/issuer fpr v4/ {
-        gsub(/[^0-9A-Fa-f]/, "", $NF)
-        print $NF
-        exit
-      }')
-  [[ $fpr =~ ^[0-9A-Fa-f]{40}$ ]] || return 1
-  printf '%s\n' "$(upper_hex "$fpr")"
-}
-
 verify_sha1_file() {
   local expected=$1 file=$2
   local line
@@ -52,6 +40,9 @@ fetch_official_strap_sha1() {
   printf '%s\n' "$hash"
 }
 
+# Trusted BlackArch keyring signing keys (full 40-character primary-key
+# fingerprints). VALIDSIG reports the primary fingerprint, so entries must be
+# primary keys, not subkeys.
 ALLOWED_KEYRING_SIGNERS=(
   8F9A9793CB8591147C2EC70566E0CDBD1E01F333
   A0917C4147A37007CB54C1CFD295AA940EFDDF62
@@ -65,56 +56,6 @@ signer_allowed() {
     [[ $(upper_hex "$fp") == "$s" ]] && return 0
   done
   return 1
-}
-
-gpg_recv_fingerprint() {
-  local homedir=$1 fp=$2
-  local server
-  for server in hkps://keyserver.ubuntu.com hkps://keys.openpgp.org; do
-    if gpg --homedir "$homedir" --batch --pinentry-mode loopback \
-      --keyserver "$server" --recv-keys "$fp" >/dev/null 2>&1; then
-      return 0
-    fi
-  done
-  return 1
-}
-
-verify_keyring_tarball() {
-  local tarfile=$1 sigfile=$2 strap_fingerprint=$3
-  have_cmd gpg || die "gpg is required to verify the BlackArch keyring"
-  local issuer
-  issuer=$(parse_sig_issuer_fingerprint "$sigfile") \
-    || die "could not parse issuer fingerprint from BlackArch keyring signature"
-  if [[ -n $strap_fingerprint && $(upper_hex "$issuer") != "$(upper_hex "$strap_fingerprint")" ]]; then
-    log "strap.sh lists key $strap_fingerprint; live keyring is signed by $issuer"
-  fi
-  signer_allowed "$issuer" || die "keyring signer $issuer is not in the BlackArch allowlist"
-  local homedir
-  homedir=$(make_priv_tempdir)
-  chmod 700 "$homedir"
-  export GNUPGHOME=$homedir
-  gpg_recv_fingerprint "$homedir" "$issuer" \
-    || { unset GNUPGHOME; rm -rf "$homedir"; die "could not retrieve BlackArch keyring signing key $issuer"; }
-  local got
-  got=$(gpg --homedir "$homedir" --batch --with-colons --fingerprint "$issuer" \
-    | awk -F: '/^fpr:/ {print $10; exit}')
-  if [[ $(upper_hex "$got") != "$(upper_hex "$issuer")" ]]; then
-    unset GNUPGHOME
-    rm -rf "$homedir"
-    die "retrieved GPG fingerprint does not match the keyring signature issuer"
-  fi
-  if ! gpg --homedir "$homedir" --batch --verify "$sigfile" "$tarfile" >/dev/null 2>&1; then
-    unset GNUPGHOME
-    rm -rf "$homedir"
-    die "BlackArch keyring signature verification failed"
-  fi
-  unset GNUPGHOME
-  rm -rf "$homedir"
-  printf '%s\n' "$issuer"
-}
-
-extract_keyring_names() {
-  tar tzf "$1" | awk -F/ '{print $NF}' | grep -E '^blackarch' || true
 }
 
 keyring_files_match() {
@@ -263,13 +204,13 @@ run_official_strap() {
   unset OMARCHY_ALLOW_DIRECT_PACMAN OMARCHY_UPDATE_PACMAN
 
   if ! sh "$work/strap.sh"; then
-   rm -rf "$work" "$before"
-   fail_restore "official BlackArch strap.sh failed"
+    rm -rf "$work" "$before"
+    fail_restore "official BlackArch strap.sh failed"
   fi
 
   if ! keyring_files_match "$work/$keyring_pkg"; then
-   rm -rf "$work" "$before"
-   fail_restore "installed BlackArch keyring does not match the independently verified package"
+    rm -rf "$work" "$before"
+    fail_restore "installed BlackArch keyring does not match the independently verified package"
   fi
 
   after=$(mktemp)
