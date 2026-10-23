@@ -45,6 +45,8 @@ signing material, curated packages, and its own CLI and state files.
 - `x86_64`
 - Root via `sudo`
 - Network access to `blackarch.org` and `www.blackarch.org`
+- Network access to `keyserver.ubuntu.com` or `keys.openpgp.org` for
+  fingerprint-pinned signing keys
 
 ## Installation
 
@@ -63,17 +65,19 @@ The script:
 1. Checks architecture and Omarchy evidence
 2. Backs up pacman configuration
 3. Records an Omarchy baseline
-4. Downloads official `strap.sh` and checks it against the SHA1
-   currently published on the BlackArch downloads page
-5. Verifies the BlackArch keyring tarball with the fingerprint named in
-   that script
-6. Runs the verified strap script if the BlackArch repo is not already
-   enabled
-7. Installs the `core` profile one package at a time, skipping anything
-   that would upgrade or replace already-installed software
-8. Installs the `blackomarchy` CLI, Omarchy menu overlay, login
-   wordmark, update hooks, and Agent Skills
-9. Compares the Omarchy baseline and exits non-zero on unexpected drift
+4. Downloads the official `strap.sh` and checks its SHA1 against the
+   value published on the BlackArch downloads page.
+5. Discovers the `blackarch-keyring` package through the official
+   repository database and verifies its detached GPG signature against
+   an explicit allowlist of trusted signer fingerprints.
+6. Runs the verified strap script if the BlackArch repository is not
+   already enabled.
+7. Installs the core profile one package at a time, skipping anything
+   that would upgrade or replace already-installed software.
+8. Installs the blackomarchy CLI, Omarchy menu overlay, login
+   wordmark, update hooks, and Agent Skills.
+9. Compares the Omarchy baseline and exits non-zero on unexpected
+   drift.
 
 Re-running bootstrap is safe. It will not duplicate `[blackarch]` or
 re-run `strap.sh` when the repo is already enabled. Re-run it after
@@ -237,15 +241,28 @@ Details: [docs/uninstall.md](docs/uninstall.md).
 ## Security model
 
 - No `curl | sh`.
-- `strap.sh` is hash-checked against the live official downloads page.
-- The keyring tarball is signature-checked before `strap.sh` is allowed
-  to install it.
+- `strap.sh` is hash-checked against the value published on the
+  official BlackArch downloads page.
+- The `blackarch-keyring` package is downloaded from the official
+  repository and its detached GPG signature is verified against an
+  explicit allowlist of trusted signer fingerprints.
+- Installed BlackArch keyring files are checked against the
+  independently verified package.
 - Bootstrap never sets `OMARCHY_ALLOW_DIRECT_PACMAN`.
+- The verified upstream script runs without a controlling terminal so
+  its full-upgrade prompt takes the explicit decline path. Keep using
+  `omarchy update` for system upgrades.
 - Conflicts are skipped, not overwritten.
 - Local operator files live in `private/` and are gitignored.
+- The downloads-page SHA1 is same-origin with `strap.sh`. It catches
+  corruption and split-brain, not a compromise of blackarch.org itself.
+- The repository database (`blackarch.db`) is fetched over HTTPS but is
+  not itself signature-verified, so a mirror could serve an older,
+  validly signed keyring package. The package signature, not the
+  database, is the trust anchor.
 
-The downloads-page SHA1 is same-origin with `strap.sh`. It catches
-corruption and split-brain, not a compromise of blackarch.org itself.
+Details of the keyring verification flow:
+[docs/blackarch-bootstrap-compatibility.md](docs/blackarch-bootstrap-compatibility.md).
 
 ## Known limitations
 
@@ -263,6 +280,11 @@ corruption and split-brain, not a compromise of blackarch.org itself.
   (`omarchy-update-system-pkgs`) completed with BlackArch enabled.
 
 ## Contributing
+
+Contributions are welcome from anyone with a GitHub account. Fork the
+repository, make a focused change on a branch, and open a pull request
+against `MahdiHedhli/BlackOmarchy:main`; collaborator access is not required.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow and validation steps.
 
 Read `.specify/memory/constitution.md` and
 `specs/001-black-omarchy-bootstrap/spec.md` before proposing changes.

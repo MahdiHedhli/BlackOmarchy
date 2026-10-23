@@ -4,7 +4,7 @@ Canonical governance for every specification, plan, task list, and
 implementation. A violation requires an explicit, documented exception in
 the corresponding spec. Silence is not an exception.
 
-**Version**: 1.0.0 | **Ratified**: 2026-08-28 | **Last Amended**: 2026-08-28
+**Version**: 1.1.0 | **Ratified**: 2026-08-28 | **Last Amended**: 2026-10-23
 
 ## I. Omarchy remains Omarchy (non-negotiable)
 
@@ -84,18 +84,23 @@ The bootstrap MUST:
    from an official BlackArch source (the downloads page on
    blackarch.org).
 3. Verify the downloaded script against that value.
-4. From the verified script, read the keyring VERSION and the GPG
-   fingerprint it names. Independently download the keyring tarball
-   and signature, and verify the tarball with that fingerprint.
-   Abort if that verification cannot be performed.
+4. Discover the current keyring package from the official BlackArch
+   repository database. Require a safe package basename. Independently
+   download its detached signature and verify the package in a temporary
+   GnuPG home against pinned primary-key fingerprints confirmed from
+   official BlackArch sources. Require successful GPG verification and
+   reject expired, revoked, unknown, or missing signers.
 5. Abort on mismatch, parse failure, or transport failure.
-6. Execute the verified script only after those checks pass.
-7. After execution, confirm the installed keyring files match the
-   independently verified tarball. Abort and restore this run's
+6. Execute the verified script unchanged only after those checks pass,
+   without a controlling terminal so upstream declines its full-upgrade
+   prompt. Never perform a system upgrade as part of bootstrap.
+7. After execution, require all three installed keyring files to match
+   the independently verified package. Abort and restore this run's
    pacman.conf backup on mismatch.
 
-Upstream strap.sh currently comments out its own keyring signature
-check. Script SHA1 is necessary and not sufficient. Same-origin HTML
+Upstream strap.sh now verifies a repository-discovered keyring package.
+The wrapper still performs its own verification. Script SHA1 is necessary
+and not sufficient. Same-origin HTML
 hash detection is not independent attestation of BlackArch package
 trust.
 
@@ -219,6 +224,15 @@ Pin or live-confirm verification data from official sources. Record
 what was verified. If a package was excluded for conflict, say so.
 
 ## Governance
+
+### 1.1.0 migration note (2026-10-23)
+
+BlackArch replaced VERSION-based keyring tarball discovery with a package
+in its repository database. Section III now follows that distribution
+format while retaining verification before execution, pinned signing keys,
+and installed-file comparison. Existing enabled repositories still skip
+strap.sh. This amendment implements the explicitly requested bootstrap
+repair and retains the no-system-upgrade invariant.
 
 This constitution supersedes informal preference. Amendments require
 an updated version, date, and a short migration note in this file.

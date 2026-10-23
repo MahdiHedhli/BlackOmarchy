@@ -14,9 +14,4 @@ want=00688950aaf5e5804d2abebb8d3d3ea1d28525ed
 # Must not pick the Full ISO digest that appears first on the page.
 [[ $got != ae64930aeddc491a4644bb3fa92a715145713c65 ]] || exit 1
 
-sample="$HERE/tests/unit/fixtures/strap-sample.sh"
-ver=$(parse_strap_version "$sample")
-fp=$(parse_strap_fingerprint "$sample")
-[[ $ver == 20251011 ]] || { echo "VERSION parse failed: $ver"; exit 1; }
-[[ $fp == 4345771566D76038C7FEB43863EC0ADBEA87E4E3 ]] || { echo "fingerprint parse failed: $fp"; exit 1; }
-echo "ok sha1/version/fingerprint parse"
+echo "ok official strap SHA1 parse"

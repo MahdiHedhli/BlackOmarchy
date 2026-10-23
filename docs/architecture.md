@@ -9,8 +9,10 @@ verify host is x86_64 Omarchy
    -> if blackarch repo missing:
          download official strap.sh
          verify SHA1 from blackarch.org/downloads.html
-         verify keyring tarball with fingerprint from the script
-         run strap.sh
+         discover blackarch-keyring package via official repository database
+         verify detached signature against pinned primary-key fingerprints
+         run unchanged strap.sh without a controlling terminal (declines sysupgrade)
+         compare all three installed keyring files to the verified package
          confirm keyring files and Omarchy repos
    -> install curated core packages one at a time
    -> install blackomarchy CLI

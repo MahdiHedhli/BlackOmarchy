@@ -176,18 +176,20 @@ still boots and updates.
   script with HTTPS only (`curl --proto '=https' --tlsv1.2 -fsSL`).
 - **FR-006**: Bootstrap MUST abort on hash mismatch, parse failure, or
   download failure without executing the script.
-- **FR-006a**: After script verification, bootstrap MUST parse VERSION
-  from the verified script, independently download
-  `blackarch-keyring-$VERSION.tar.gz` and `.sig`, parse the issuer
-  fingerprint from the signature, retrieve that key, verify the
-  tarball in a temporary GnuPG homedir, and abort if verification
-  cannot be performed. The `recv-keys` fingerprint inside strap.sh is
-  recorded for audit; it is not the sole trust anchor because it can
-  be stale relative to the live tarball.
+- **FR-006a** (updated 2026-10-23): After script verification, bootstrap
+  MUST discover the keyring package through the official repository
+  database, reject unsafe or ambiguous filenames, independently download
+  the package and detached signature, and verify it in a temporary
+  GnuPG home against pinned primary-key fingerprints confirmed from
+  official BlackArch sources. Failed verification and expired, revoked,
+  unknown, or missing signers MUST abort. Record the verified package
+  filename and primary signer fingerprint for audit.
 - **FR-007**: Bootstrap MUST execute the verified strap script only
   after FR-005 and FR-006a pass, and MUST NOT pipe it from the network
-  into a shell in one step. After execution, installed keyring files
-  MUST match the independently verified tarball or the run restores
+  into a shell in one step. Run it without a controlling terminal so
+  upstream explicitly declines the full-upgrade prompt. After execution,
+  all three installed keyring files MUST match the independently verified
+  package or the run restores
   this run's pacman.conf backup and aborts.
 - **FR-007a**: If `pacman-conf --repo-list` already contains exactly
   one enabled `blackarch` repository and Omarchy repos are intact,

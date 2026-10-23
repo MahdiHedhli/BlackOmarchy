@@ -107,7 +107,7 @@ load_paths() {
   BLACKOMARCHY_BIN_DIR="${BLACKOMARCHY_BIN_DIR:-/usr/local/bin}"
   BLACKARCH_STRAP_URL="${BLACKARCH_STRAP_URL:-https://blackarch.org/strap.sh}"
   BLACKARCH_DOWNLOADS_URL="${BLACKARCH_DOWNLOADS_URL:-https://blackarch.org/downloads.html}"
-  BLACKARCH_KEYRING_BASE="${BLACKARCH_KEYRING_BASE:-https://www.blackarch.org/keyring}"
+  BLACKARCH_MIRROR_BASE="${BLACKARCH_MIRROR_BASE:-https://blackarch.org/blackarch/blackarch/os/x86_64}"
 }
 
 state_dir() {
